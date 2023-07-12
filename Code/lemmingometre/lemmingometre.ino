@@ -12,7 +12,7 @@ int chipSelect = D8;  //SD card
 int obstacleSensor = D4;
 
 ///// DATA VARIABLES /////
-int obstacle_acquisition_time = 30000;
+int obstacle_acquisition_time = 10000;
 int obstacleValue;
 DateTime now;
 
@@ -75,7 +75,7 @@ void setupSD() {
 
 void setFileName() {
   DateTime now = rtc.now();
-  snprintf(filename, 50, "%d-%d-%d-%d-%d-%d.txt", now.year(), now.month(), now.day(), now.hour(), now.minute(), now.second());
+  snprintf(filename, 50, "%d-%d-%d-%d-%d-%d.csv", now.year(), now.month(), now.day(), now.hour(), now.minute(), now.second());
 }
 
 
