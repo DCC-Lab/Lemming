@@ -8,4 +8,5 @@ Code is written using Google Colaboratory, and is accessible via the group Googl
 https://drive.google.com/drive/u/1/folders/1H9pCUoOfb16ByjPDxS9R-4BJ12bMjljt
 
 
-![image](https://github.com/DCC-Lab/Lemming/assets/117391950/043e9697-3990-4b89-bdc1-6080681fc1f1)
+![image](https://github.com/DCC-Lab/Lemming/assets/117391950/69cccb36-8c90-4576-b951-a379c91b612f)
+
