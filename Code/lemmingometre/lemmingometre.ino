@@ -9,10 +9,10 @@ char filename[50];
 RTC_PCF8523 rtc;
 
 int chipSelect = D8;  //SD card
-int obstacleSensor = D4;
+int obstacleSensor = D0;
 
 ///// DATA VARIABLES /////
-int obstacle_acquisition_time = 10000;
+int obstacle_acquisition_time = 20000;
 int obstacleValue;
 DateTime now;
 
@@ -130,7 +130,7 @@ void printTimeStamp(){
 }
 
 int readObstacleSensor() {
-  return !digitalRead(obstacleSensor);
+  return digitalRead(obstacleSensor);
 }
 
 void printObstacleSensorReading() {
