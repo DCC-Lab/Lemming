@@ -7,7 +7,7 @@
 #define FORMAT_SPIFFS_IF_FAILED true
 
 ESP32Time rtc;
-DFRobot_DS1307 DS1307;
+
 
 void setup(){
   Serial.begin(115200);
@@ -327,14 +327,3 @@ String get_create_startFile(){
   
   return String(fileName);
 }
-
-
-
-
-
-
-
-
-
-
-

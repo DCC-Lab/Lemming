@@ -1,22 +1,35 @@
 #include "FS.h"
 #include "SPIFFS.h"
 #include <ESP32Time.h>
-
 #include <vector>
+#include "RTClib.h"
 
 #define FORMAT_SPIFFS_IF_FAILED true
 
-ESP32Time rtc;
-DFRobot_DS1307 DS1307;
+RTC_PCF8523 rtc;
+
+uint16_t getTimeBuff[7];
 
 void setup(){
   Serial.begin(115200);
 
-  // if(!SPIFFS.begin(FORMAT_SPIFFS_IF_FAILED)){
-  //     Serial.println("SPIFFS Mount Failed");
-  //     return;
-  SPIFFS.begin(false);
+  if(!SPIFFS.begin(FORMAT_SPIFFS_IF_FAILED)){
+      Serial.println("SPIFFS Mount Failed");
+      return;
+  }
+  pinMode(GPIO_NUM_26, OUTPUT);
+  digitalWrite(GPIO_NUM_26, HIGH);
+
   
+  if (! rtc.begin()) {
+    Serial.println("Couldn't find RTC");
+    Serial.flush();
+    while (1) delay(10);
+  }
+
+  rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+
+  rtc.start();
 
 
 
@@ -28,7 +41,7 @@ void setup(){
 
   // listAndSendFiles("/");
 
-  listDir(SPIFFS, "/", 0); // Voir la liste des fichiers contenu dans le SPIFFS
+  // listDir(SPIFFS, "/", 0); // Voir la liste des fichiers contenu dans le SPIFFS
 
   // readFile(SPIFFS, "/0003-349235"); // Ouvrir et lire un fichier contenu dans le SPIFFS avec le nom "/exemple.txt"
 
@@ -44,7 +57,24 @@ void setup(){
 
   // #### ATTENTION, CETTE FONCTION SUPPRIME L'ENTIÈRETÉ DES FICHERS CONTENUS DANS LE SPIFFS #####
 
-  // deleteAllFiles(SPIFFS, "/"); // Supprimer tous les fichier du SPIFFS
+  deleteAllFiles(SPIFFS, "/"); // Supprimer tous les fichier du SPIFFS
+  listDir(SPIFFS, "/", 0);
+
+  delay(5000);
+  DateTime now = rtc.now();
+
+    Serial.print(now.year(), DEC);
+    Serial.print('/');
+    Serial.print(now.month(), DEC);
+    Serial.print('/');
+    Serial.print(now.day(), DEC);
+    Serial.print(" (");
+    Serial.print(now.hour(), DEC);
+    Serial.print(':');
+    Serial.print(now.minute(), DEC);
+    Serial.print(':');
+    Serial.print(now.second(), DEC);
+    Serial.println();
 
 }
 
@@ -259,75 +289,74 @@ void deleteAllFiles(fs::FS &fs, const String &dirPath) {
     }
 }
 
-int countFilesInDirectory(fs::FS &fs, const String &dirPath) {
-    int fileCount = 0;
+// int countFilesInDirectory(fs::FS &fs, const String &dirPath) {
+//     int fileCount = 0;
 
-    File dir = fs.open(dirPath.c_str());
-    if (!dir || !dir.isDirectory()) {
-        return -1; // Directory doesn't exist or isn't valid
-    }
+//     File dir = fs.open(dirPath.c_str());
+//     if (!dir || !dir.isDirectory()) {
+//         return -1; // Directory doesn't exist or isn't valid
+//     }
 
-    File file = dir.openNextFile();
-    while (file) {
-        if (!file.isDirectory()) {
-            fileCount++;
-        }
-        file = dir.openNextFile();
-    }
+//     File file = dir.openNextFile();
+//     while (file) {
+//         if (!file.isDirectory()) {
+//             fileCount++;
+//         }
+//         file = dir.openNextFile();
+//     }
 
-    return fileCount;
-}
+//     return fileCount;
+// }
 
-int countFilesWithBaseName(fs::FS &fs, const String &dirPath, const String &baseName) {
-    int fileCount = 0;
+// int countFilesWithBaseName(fs::FS &fs, const String &dirPath, const String &baseName) {
+//     int fileCount = 0;
 
-    File dir = fs.open(dirPath.c_str());
-    if (!dir || !dir.isDirectory()) {
-        return fileCount; // Directory doesn't exist or isn't valid
-    }
+//     File dir = fs.open(dirPath.c_str());
+//     if (!dir || !dir.isDirectory()) {
+//         return fileCount; // Directory doesn't exist or isn't valid
+//     }
 
-    File file = dir.openNextFile();
-    while (file) {
-        if (!file.isDirectory() && String(file.name()).startsWith("/" + baseName)) {
-            fileCount++;
-        }
-        file = dir.openNextFile();
-    }
+//     File file = dir.openNextFile();
+//     while (file) {
+//         if (!file.isDirectory() && String(file.name()).startsWith("/" + baseName)) {
+//             fileCount++;
+//         }
+//         file = dir.openNextFile();
+//     }
 
-    return fileCount;
-}
+//     return fileCount;
+// }
 
-String get_create_FileName() {
-  char epochStr[20];
-  char fileName[30]; // Adjusted length for number of files and separators
-  itoa(rtc.getEpoch(), epochStr, 10);
+// String get_create_FileName() {
+//   char epochStr[20];
+//   char fileName[30]; // Adjusted length for number of files and separators
+//   itoa(rtc.getEpoch(), epochStr, 10);
   
-  String directoryPath = "/"; // Replace with your directory path
-  int numOfFiles = countFilesInDirectory(SPIFFS, directoryPath);
+//   String directoryPath = "/"; // Replace with your directory path
+//   int numOfFiles = countFilesInDirectory(SPIFFS, directoryPath);
   
-  sprintf(fileName, "/%04d-%s", numOfFiles, epochStr);
+//   sprintf(fileName, "/%04d-%s", numOfFiles, epochStr);
   
-  createFile(SPIFFS, fileName);
+//   createFile(SPIFFS, fileName);
   
-  Serial.print("New file created at: ");
-  Serial.println(rtc.getEpoch());
+//   Serial.print("New file created at: ");
+//   Serial.println(rtc.getEpoch());
   
-  return String(fileName);
-}
+//   return String(fileName);
+// }
 
-String get_create_startFile(){
-  char fileName[30]; // Adjusted length for number of files and separators
+// String get_create_startFile(){
+//   char fileName[30]; // Adjusted length for number of files and separators
   
-  String directoryPath = "/"; // Replace with your directory path
-  int numOfFiles = countFilesInDirectory(SPIFFS, directoryPath);
+//   String directoryPath = "/"; // Replace with your directory path
+//   int numOfFiles = countFilesInDirectory(SPIFFS, directoryPath);
   
-  sprintf(fileName, "/%04d-%s", numOfFiles, "startFile");
+//   sprintf(fileName, "/%04d-%s", numOfFiles, "startFile");
   
-  createFile(SPIFFS, fileName);
+//   createFile(SPIFFS, fileName);
   
-  return String(fileName);
-}
-
+//   return String(fileName);
+// }
 
 
 
