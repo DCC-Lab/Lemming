@@ -22,8 +22,8 @@ void setup(){
   Serial.begin(115200);
   SPIFFS.begin(false);
 
-  pinMode(GPIO_NUM_26, OUTPUT); // RTC transistor
-  pinMode(GPIO_NUM_27, INPUT); //ObstacleSensor
+
+  pinMode(GPIO_NUM_26, INPUT); //ObstacleSensor
   
   if (! rtc.begin()) {
     Serial.println("Couldn't find RTC");
@@ -63,7 +63,7 @@ void setup(){
     }
   }
 
-    esp_sleep_enable_ext0_wakeup(GPIO_NUM_27,RISING);
+    esp_sleep_enable_ext0_wakeup(GPIO_NUM_26,RISING);
     esp_deep_sleep_start();
     
 }
@@ -182,7 +182,7 @@ int countFilesInDirectory(fs::FS &fs, const String &dirPath) {
 }
 
 int readObstacleSensor() {
-  return digitalRead(GPIO_NUM_27);
+  return digitalRead(GPIO_NUM_26);
 }
 
 void printObstacleSensorReading() {

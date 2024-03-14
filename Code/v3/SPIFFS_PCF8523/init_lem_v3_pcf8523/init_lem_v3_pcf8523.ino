@@ -17,8 +17,7 @@ void setup(){
       Serial.println("SPIFFS Mount Failed");
       return;
   }
-  pinMode(GPIO_NUM_26, OUTPUT);
-  digitalWrite(GPIO_NUM_26, HIGH);
+  
 
   
   if (! rtc.begin()) {
