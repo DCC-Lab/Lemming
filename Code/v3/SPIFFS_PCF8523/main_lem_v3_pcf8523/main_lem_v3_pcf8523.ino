@@ -20,6 +20,7 @@ int obstacleValue;
 
 void setup(){
   Serial.begin(115200);
+   
   SPIFFS.begin(false);
 
 
@@ -31,6 +32,7 @@ void setup(){
     while (1) delay(10);
   }
   rtc.start();
+ 
 
   if (firstCount){
 
@@ -40,7 +42,10 @@ void setup(){
     }
 
     else{
+      delay(5000);
+      Serial.println("Creating a setupFile...");
       writeFile(SPIFFS, "/setupFile", "Lemming Enumeration Module started!");
+      Serial.println("Done.");
       listDir(SPIFFS, "/", 0);
       Serial.println("Disconnect LEM device now.");
       delay(60000);

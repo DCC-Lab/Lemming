@@ -1,3 +1,22 @@
+/*
+    *** Initialize LEM Device ***
+
+    This code initializes the LEM device: it deletes all files on its memory and adjusts the time of the real-time clock to prepare the device to be deployed on the field.
+    This code should be used to:
+    1) Setup a newly built LEM device ;
+    2) Reinitialize a LEM device after a completed experiment/deployment (the data from that experiment should have been saved correctly using the "Read LEM Device" code).
+
+    The circuit:
+    This code should be used with the LEM v3 circuit board with this hardware:
+    - FIREBEETLE ESP32 (DFR0478)
+    - PCF8523 RTC
+    - PIR sensor
+
+    Authors:
+    Mireille Quémener
+    Thomas Shooner
+*/
+
 #include "FS.h"
 #include "SPIFFS.h"
 #include <ESP32Time.h>
@@ -8,361 +27,171 @@
 
 RTC_PCF8523 rtc;
 
-uint16_t getTimeBuff[7];
-
-void setup(){
+void setup() {
   Serial.begin(115200);
+  delay(5000);
+  Serial.println("");
+  Serial.println("Running this code will:");
+  Serial.println("- reinitialize the LEM device and delete ALL files on its memory;");
+  Serial.println("- set the real-time clock (RTC) using the time of your computer.");
+  Serial.println("Are you sure you want to reinitialize the LEM device? (Y/N)");
 
-  if(!SPIFFS.begin(FORMAT_SPIFFS_IF_FAILED)){
-      Serial.println("SPIFFS Mount Failed");
-      return;
+  while (!Serial.available())
+    ;
+
+  char userInput = Serial.read();
+
+  if (userInput == 'Y' || userInput == 'y') {
+    Serial.println("-------------------------");
+    setSPIFFS();
+    setRTC();
+    Serial.println("-------------------------");
+    deleteAllFiles(SPIFFS, "/");
+    listDir(SPIFFS, "/", 0);
+
+    if (SPIFFSIsEmpty()) {
+      Serial.println("LEM device memory is empty!");
+    } else {
+      Serial.println("LEM device memory is not empty! Try reboot the LEM.");
+    }
+    getDateTime();
   }
-  
 
-  
-  if (! rtc.begin()) {
-    Serial.println("Couldn't find RTC");
+  else if (userInput == 'N' || userInput == 'n') {
+    Serial.println("LEM device has not been reinitialized.");
+  }
+
+  else {
+    Serial.println("Your selection is not valid. Please reboot LEM device and try again.");
+  }
+}
+
+void loop() {
+}
+
+void setSPIFFS() {
+  if (!SPIFFS.begin(FORMAT_SPIFFS_IF_FAILED)) {
+    Serial.println("SPIFFS memory setup failed");
+    return;
+  } else {
+    Serial.println("SPIFFS memory setup succeded.");
+  }
+}
+
+void setRTC() {
+  if (!rtc.begin()) {
+    Serial.println("Couldn't find RTC.");
+    Serial.println("Please verify there is a battery in the RTC chip.");
     Serial.flush();
     while (1) delay(10);
+  }
+
+  else {
+    Serial.println("RTC setup succeded.");
   }
 
   rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
 
   rtc.start();
-
-
-
-
-
-
-// ##### CE CODE PERMET DE VOIR LE NOM DES FICHIERS CRÉER DANS LE SPIFFS ####
-
-
-  // listAndSendFiles("/");
-
-  // listDir(SPIFFS, "/", 0); // Voir la liste des fichiers contenu dans le SPIFFS
-
-  // readFile(SPIFFS, "/0003-349235"); // Ouvrir et lire un fichier contenu dans le SPIFFS avec le nom "/exemple.txt"
-
-  // appendFile(SPIFFS, "/hello.txt", "World!\r\n"); // Ajouter du contenu au fichier "exemple.txt"
-
-  // renameFile(SPIFFS, "/exemple.txt", "/exemple2.txt");  // Renommer le fichier "/exemple.txt" vers "exemple2.txt"
-   
-  // deleteFile(SPIFFS, "/exemple2.txt"); // Supprimer le fichier "exemple2.txt"
-
-  // createFile(SPIFFS, "/hello.txt");  // Créer le fichier "hello.txt"
-  // listDir(SPIFFS, "/", 0);
-
-
-  // #### ATTENTION, CETTE FONCTION SUPPRIME L'ENTIÈRETÉ DES FICHERS CONTENUS DANS LE SPIFFS #####
-
-  deleteAllFiles(SPIFFS, "/"); // Supprimer tous les fichier du SPIFFS
-  listDir(SPIFFS, "/", 0);
-
-  delay(5000);
-  DateTime now = rtc.now();
-
-    Serial.print(now.year(), DEC);
-    Serial.print('/');
-    Serial.print(now.month(), DEC);
-    Serial.print('/');
-    Serial.print(now.day(), DEC);
-    Serial.print(" (");
-    Serial.print(now.hour(), DEC);
-    Serial.print(':');
-    Serial.print(now.minute(), DEC);
-    Serial.print(':');
-    Serial.print(now.second(), DEC);
-    Serial.println();
-
 }
-
-void loop() {
-  // if (Serial.available() > 0) {
-  //   char incomingChar = Serial.read(); // Read the incoming character
-
-  //   if (incomingChar == 'R') {
-  //     // Send data to Python when 'R' is received
-  //     listAndSendFiles("/");
-  //   }
-  // }
-}
-
-
-/*
-
-// void listDir(fs::FS &fs, const char * dirname, uint8_t levels){
-//     Serial.printf("Listing directory: %s\r\n", dirname);
-
-//     File root = fs.open(dirname);
-//     if(!root){
-//         Serial.println("- failed to open directory");
-//         return;
-//     }
-//     if(!root.isDirectory()){
-//         Serial.println(" - not a directory");
-//         return;
-//     }
-
-//     File file = root.openNextFile();
-//     while(file){
-//         if(file.isDirectory()){
-//             Serial.print("  DIR : ");
-//             Serial.println(file.name());
-//             if(levels){
-//                 listDir(fs, file.name(), levels -1);
-//             }
-//         } else {
-//             Serial.print("  FILE: ");
-//             Serial.print(file.name());
-//             Serial.print("\tSIZE: ");
-//             Serial.println(file.size());
-//         }
-//         file = root.openNextFile();
-//     }
-// }
-
-*/
 
 void listDir(fs::FS &fs, const char *dirname, uint8_t levels) {
-    Serial.printf("Listing directory: %s\r\n", dirname);
+  Serial.printf("List of files in the directory: %s\r\n", dirname);
 
-    File root = fs.open(dirname);
-    if (!root) {
-        Serial.println("- failed to open directory");
-        return;
-    }
-    if (!root.isDirectory()) {
-        Serial.println(" - not a directory");
-        return;
-    }
+  File root = fs.open(dirname);
+  if (!root) {
+    Serial.println("- failed to open directory");
+    return;
+  }
+  if (!root.isDirectory()) {
+    Serial.println(" - not a directory");
+    return;
+  }
 
-    std::vector<String> fileNames;
+  std::vector<String> fileNames;
 
-    File file = root.openNextFile();
-    while (file) {
-        if (file.isDirectory()) {
-            fileNames.push_back(String(file.name()) + "/");
-        } else {
-            fileNames.push_back(file.name());
-        }
-
-        file = root.openNextFile();
-    }
-
-    std::sort(fileNames.begin(), fileNames.end());
-
-    for (const String &name : fileNames) {
-        Serial.print("  ");
-        if (levels > 0 && name.endsWith("/")) {
-            Serial.print("DIR : ");
-            Serial.println(name);
-            listDir(fs, (dirname + name).c_str(), levels - 1);
-        } else {
-            Serial.print("FILE: ");
-            Serial.print(name);
-            File file = fs.open((dirname + name).c_str());
-            Serial.print("\tSIZE: ");
-            Serial.println(file.size());
-            file.close();
-        }
-    }
-}
-
-void listAndSendFiles(const char *dirname) {
-    File root = SPIFFS.open(dirname);
-    if (!root) {
-        Serial.println("- failed to open directory");
-        return;
-    }
-    if (!root.isDirectory()) {
-        Serial.println(" - not a directory");
-        return;
-    }
-
-    File file = root.openNextFile();
-    while (file) {
-        if (file.isDirectory()) {
-            // Recursively list and send files in subdirectories
-            listAndSendFiles(file.name());
-        } else {
-            // Read and send the content of the file
-            Serial.print("Sending file: ");
-            Serial.println(file.name());
-            while (file.available()) {
-                Serial.write(file.read());
-            }
-            Serial.println("End of file"); // Add a newline to indicate the end of the file
-        }
-        file = root.openNextFile();
-    }
-  Serial.println("End");
-}
-
-void readFile(fs::FS &fs, const char * path){
-    Serial.printf("Reading file: %s\r\n", path);
-
-    File file = fs.open(path);
-    if(!file || file.isDirectory()){
-        Serial.println("- failed to open file for reading");
-        return;
-    }
-
-    Serial.println("- read from file:");
-    while(file.available()){
-        Serial.write(file.read());
-    }
-}
-
-void writeFile(fs::FS &fs, const char * path, const char * message){
-    Serial.printf("Writing file: %s\r\n", path);
-
-    File file = fs.open(path, FILE_WRITE);
-    if(!file){
-        Serial.println("- failed to open file for writing");
-        return;
-    }
-    if(file.print(message)){
-        Serial.println("- file written");
+  File file = root.openNextFile();
+  while (file) {
+    if (file.isDirectory()) {
+      fileNames.push_back(String(file.name()) + "/");
     } else {
-        Serial.println("- frite failed");
+      fileNames.push_back(file.name());
     }
-}
 
-void createFile(fs::FS &fs, const char * path){
-  Serial.printf("Creating file: %s\r\n", path);
-  File file = fs.open(path, FILE_WRITE);
-}
+    file = root.openNextFile();
+  }
 
-void appendFile(fs::FS &fs, const char * path, const char * message){
-    Serial.printf("Appending to file: %s\r\n", path);
+  std::sort(fileNames.begin(), fileNames.end());
 
-    File file = fs.open(path, FILE_APPEND);
-    if(!file){
-        Serial.println("- failed to open file for appending");
-        return;
-    }
-    if(file.print(message)){
-        Serial.println("- message appended");
+  for (const String &name : fileNames) {
+    Serial.print("  ");
+    if (levels > 0 && name.endsWith("/")) {
+      Serial.print("DIR : ");
+      Serial.println(name);
+      listDir(fs, (dirname + name).c_str(), levels - 1);
     } else {
-        Serial.println("- append failed");
+      Serial.print("FILE: ");
+      Serial.print(name);
+      File file = fs.open((dirname + name).c_str());
+      Serial.print("\tSIZE: ");
+      Serial.println(file.size());
+      file.close();
     }
-}
-
-void renameFile(fs::FS &fs, const char * path1, const char * path2){
-    Serial.printf("Renaming file %s to %s\r\n", path1, path2);
-    if (fs.rename(path1, path2)) {
-        Serial.println("- file renamed");
-    } else {
-        Serial.println("- rename failed");
-    }
-}
-
-void deleteFile(fs::FS &fs, const char * path){
-    Serial.printf("Deleting file: %s\r\n", path);
-    if(fs.remove(path)){
-        Serial.println("- file deleted");
-    } else {
-        Serial.println("- delete failed");
-    }
+  }
 }
 
 void deleteAllFiles(fs::FS &fs, const String &dirPath) {
-    Serial.printf("Deleting files in directory: %s\r\n", dirPath.c_str());
+  Serial.printf("Deleting files in directory: %s\r\n", dirPath.c_str());
 
-    File dir = fs.open(dirPath.c_str());
-    if (!dir || !dir.isDirectory()) {
-        Serial.println("- not a valid directory");
-        return;
-    }
+  File dir = fs.open(dirPath.c_str());
+  if (!dir || !dir.isDirectory()) {
+    Serial.println("- not a valid directory");
+    return;
+  }
 
-    File file = dir.openNextFile();
-    while (file) {
-        String filePath = file.name();
-        if (fs.remove(filePath.c_str())) {
-            Serial.println("- deleted file: " + filePath);
-        } else {
-            Serial.println("- delete failed for file: " + filePath);
-        }
-        file = dir.openNextFile();
+  File file = dir.openNextFile();
+  while (file) {
+    String filePath = file.name();
+    if (fs.remove(filePath.c_str())) {
+      Serial.println("- deleted file: " + filePath);
+    } else {
+      Serial.println("- delete failed for file: " + filePath);
     }
+    file = dir.openNextFile();
+  }
 }
 
-// int countFilesInDirectory(fs::FS &fs, const String &dirPath) {
-//     int fileCount = 0;
+bool SPIFFSIsEmpty() {
+  File root = SPIFFS.open("/");
+  if (!root) {
+    Serial.println("Failed to open directory");
+    return false;
+  }
 
-//     File dir = fs.open(dirPath.c_str());
-//     if (!dir || !dir.isDirectory()) {
-//         return -1; // Directory doesn't exist or isn't valid
-//     }
+  bool isEmpty = true;
+  File file = root.openNextFile();
+  while (file) {
+    isEmpty = false;
+    file.close();
+    file = root.openNextFile();
+  }
+  root.close();
+  return isEmpty;
+}
 
-//     File file = dir.openNextFile();
-//     while (file) {
-//         if (!file.isDirectory()) {
-//             fileCount++;
-//         }
-//         file = dir.openNextFile();
-//     }
-
-//     return fileCount;
-// }
-
-// int countFilesWithBaseName(fs::FS &fs, const String &dirPath, const String &baseName) {
-//     int fileCount = 0;
-
-//     File dir = fs.open(dirPath.c_str());
-//     if (!dir || !dir.isDirectory()) {
-//         return fileCount; // Directory doesn't exist or isn't valid
-//     }
-
-//     File file = dir.openNextFile();
-//     while (file) {
-//         if (!file.isDirectory() && String(file.name()).startsWith("/" + baseName)) {
-//             fileCount++;
-//         }
-//         file = dir.openNextFile();
-//     }
-
-//     return fileCount;
-// }
-
-// String get_create_FileName() {
-//   char epochStr[20];
-//   char fileName[30]; // Adjusted length for number of files and separators
-//   itoa(rtc.getEpoch(), epochStr, 10);
-  
-//   String directoryPath = "/"; // Replace with your directory path
-//   int numOfFiles = countFilesInDirectory(SPIFFS, directoryPath);
-  
-//   sprintf(fileName, "/%04d-%s", numOfFiles, epochStr);
-  
-//   createFile(SPIFFS, fileName);
-  
-//   Serial.print("New file created at: ");
-//   Serial.println(rtc.getEpoch());
-  
-//   return String(fileName);
-// }
-
-// String get_create_startFile(){
-//   char fileName[30]; // Adjusted length for number of files and separators
-  
-//   String directoryPath = "/"; // Replace with your directory path
-//   int numOfFiles = countFilesInDirectory(SPIFFS, directoryPath);
-  
-//   sprintf(fileName, "/%04d-%s", numOfFiles, "startFile");
-  
-//   createFile(SPIFFS, fileName);
-  
-//   return String(fileName);
-// }
-
-
-
-
-
-
-
-
-
-
+void getDateTime() {
+  Serial.print("This is the date and time set on the RTC. Please check it is correct: ");
+  DateTime now = rtc.now();
+  Serial.print(now.year(), DEC);
+  Serial.print('/');
+  Serial.print(now.month(), DEC);
+  Serial.print('/');
+  Serial.print(now.day(), DEC);
+  Serial.print(" ");
+  Serial.print(now.hour(), DEC);
+  Serial.print(':');
+  Serial.print(now.minute(), DEC);
+  Serial.print(':');
+  Serial.print(now.second(), DEC);
+  Serial.println();
+}

@@ -30,7 +30,7 @@ void setup(){
 
   listDir(SPIFFS, "/", 0); // Voir la liste des fichiers contenu dans le SPIFFS
 
-  // readFile(SPIFFS, "/0003-349235"); // Ouvrir et lire un fichier contenu dans le SPIFFS avec le nom "/exemple.txt"
+   //readFile(SPIFFS, "/0003-2024314143440"); // Ouvrir et lire un fichier contenu dans le SPIFFS avec le nom "/exemple.txt"
 
   // appendFile(SPIFFS, "/hello.txt", "World!\r\n"); // Ajouter du contenu au fichier "exemple.txt"
 
