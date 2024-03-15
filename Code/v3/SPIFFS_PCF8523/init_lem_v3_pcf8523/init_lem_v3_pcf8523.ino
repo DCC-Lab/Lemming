@@ -30,11 +30,12 @@ RTC_PCF8523 rtc;
 void setup() {
   Serial.begin(115200);
   delay(5000);
-  Serial.println("");
+  Serial.println(" ");
+  Serial.println("*** Initialize LEM Device ***");
   Serial.println("Running this code will:");
   Serial.println("- reinitialize the LEM device and delete ALL files on its memory;");
   Serial.println("- set the real-time clock (RTC) using the time of your computer.");
-  Serial.println("Are you sure you want to reinitialize the LEM device? (Y/N)");
+  Serial.println("Are you sure you want to initialize the LEM device? (Y/N)");
 
   while (!Serial.available())
     ;
@@ -51,7 +52,8 @@ void setup() {
 
     if (SPIFFSIsEmpty()) {
       Serial.println("LEM device memory is empty!");
-    } else {
+    } 
+    else {
       Serial.println("LEM device memory is not empty! Try reboot the LEM.");
     }
     getDateTime();
