@@ -33,18 +33,21 @@ void setup() {
   Serial.println(" ");
   Serial.println("*** Initialize LEM Device ***");
   Serial.println("Running this code will:");
-  Serial.println("- reinitialize the LEM device and delete ALL files on its memory;");
+  Serial.println("- reinitialize the LEM device and delete ALL files in memory;");
   Serial.println("- set the real-time clock (RTC) using the time of your computer.");
+  Serial.println("-------------------------");
+
+  setSPIFFS();
+  listDir(SPIFFS, "/", 0);
+
   Serial.println("Are you sure you want to initialize the LEM device? (Y/N)");
 
-  while (!Serial.available())
-    ;
+  while (!Serial.available());
 
   char userInput = Serial.read();
 
   if (userInput == 'Y' || userInput == 'y') {
     Serial.println("-------------------------");
-    setSPIFFS();
     setRTC();
     Serial.println("-------------------------");
     deleteAllFiles(SPIFFS, "/");
