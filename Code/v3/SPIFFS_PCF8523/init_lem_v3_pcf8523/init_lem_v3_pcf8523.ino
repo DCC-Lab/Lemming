@@ -38,6 +38,7 @@ void setup() {
   Serial.println("-------------------------");
 
   setSPIFFS();
+  SPIFFS.format();
   listDir(SPIFFS, "/", 0);
 
   Serial.println("Are you sure you want to initialize the LEM device? (Y/N)");
@@ -47,19 +48,36 @@ void setup() {
   char userInput = Serial.read();
 
   if (userInput == 'Y' || userInput == 'y') {
-    Serial.println("-------------------------");
-    setRTC();
-    Serial.println("-------------------------");
     deleteAllFiles(SPIFFS, "/");
     listDir(SPIFFS, "/", 0);
 
     if (SPIFFSIsEmpty()) {
       Serial.println("LEM device memory is empty!");
-    } 
-    else {
+      Serial.println("-------------------------");
+      Serial.flush();
+      Serial.println("Is there a battery coin inserted in the RTC chip? (Y/N)");
+      while (!Serial.available());
+      char userInput2 = Serial.read();
+
+      if (userInput2 == 'Y' || userInput2 == 'y') {
+        Serial.println("-------------------------");
+        Serial.println("Perfect! Do not remove it.");
+        setRTC();
+        getDateTime();
+      }
+
+      else if (userInput2 == 'N' || userInput2 == 'n') {
+        Serial.println("-------------------------");
+        Serial.println("Please insert a battery and restart the process.");
+      }
+
+      else {
+        Serial.println("Your selection is not valid. Please reboot LEM device and try again.");
+      }
+
+    } else {
       Serial.println("LEM device memory is not empty! Try reboot the LEM.");
     }
-    getDateTime();
   }
 
   else if (userInput == 'N' || userInput == 'n') {
@@ -69,7 +87,10 @@ void setup() {
   else {
     Serial.println("Your selection is not valid. Please reboot LEM device and try again.");
   }
+
 }
+
+
 
 void loop() {
 }
