@@ -77,7 +77,7 @@ def open_folder():
         ser.close()
         status_label.config(text=f"File download done at {dt.datetime.now().strftime("%Y/%m/%d %H:%M:%S")}")
     except SerialException as file_not_found:
-        if str(file_not_found).index("PermissionError") >= 0:
+        if str(file_not_found).find("PermissionError") >= 0:
             status_label.config(text=f"There was an error downloading files, you should close either the Serial Monitor or the Arduino app altogether.\nThe app couldn't read the data because someone is already connected to the device.\n This is the error generated : \n{file_not_found}")
         else:
             status_label.config(text=f"There was an error downloading files, you probably didn't select the right port. \n This is the error generated : \n{file_not_found}")
