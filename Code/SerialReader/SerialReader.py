@@ -16,11 +16,14 @@ window.title("Lemming")
 status_label = tk.Label(text='Select the Firebeetle\'s port, it should be the same port as in the Arduino app, then select where to save the data.')
 status_label.pack(ipadx=100, ipady=50)
 
-ports = serial.tools.list_ports.comports()
 
-port_selector = ttk.Combobox(window, textvariable=tk.StringVar())
-port_selector['values'] = ports
+def assign_port_values():
+    port_selector["values"] = serial.tools.list_ports.comports()
+
+port_selector = ttk.Combobox(window, textvariable=tk.StringVar(), postcommand=assign_port_values)
 port_selector.pack(ipadx=100, pady=25)
+
+assign_port_values()
 
 port_selector.current(0)
 
