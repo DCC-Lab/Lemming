@@ -36,3 +36,6 @@ Test data/2023-7-20-12-14-24.csv
 Test data/2023-7-20-12-14-27.csv
 Test data/2023-7-20-12-14-3.csv
 Test data/2023-7-20-12-14-6.csv
+Code/SerialReader/build
+Code/SerialReader/dist
+Code/SerialReader/SerialReader.spec
