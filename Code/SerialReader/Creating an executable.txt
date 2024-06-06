@@ -1,0 +1,3 @@
+- Install pyinstaller
+- run this command from the ./SerialReader folder :
+    pyinstaller --onefile --icon='../../Logo/Logo.ico' --add-data '../../Logo/Logo.ico;.' --clean .\SerialReader.py
