@@ -11,28 +11,30 @@ from tkinter import filedialog as fd
 import sys
 
 window = tk.Tk()
-window.title("Lemming")
+window.title("Lem")
 
 status_label = tk.Label(text='Select the Firebeetle\'s port, it should be the same port as in the Arduino app, then select where to save the data.')
 status_label.pack(ipadx=100, ipady=50)
 
 
 def assign_port_values():
+    ''' Re-builds the list of values for the combo box. '''
     port_selector["values"] = serial.tools.list_ports.comports()
 
+#The post command is called every time the user opens the combo box.
 port_selector = ttk.Combobox(window, textvariable=tk.StringVar(), postcommand=assign_port_values)
 port_selector.pack(ipadx=100, pady=25)
 
-assign_port_values()
+assign_port_values() #First refresh.
 
 port_selector.current(0)
 
 
 def resource_path(relative_path):
-    """ Get absolute path to resource, works for dev and for PyInstaller """
+    ''' Get absolute path to resource, works for dev and for PyInstaller '''
     try:
         # PyInstaller creates a temp folder and stores path in _MEIPASS
-        base_path = sys._MEIPASS
+        base_path = sys._MEIPASS # Throws an exception when not run by PyInstaller
     except Exception:
         base_path = os.path.abspath("../../Logo/")
 
@@ -43,6 +45,7 @@ window.iconbitmap(resource_path("Logo.ico"))
 
 
 def open_folder():
+    ''' Asks the user where he wants to save the data, then transfers the files from the serial port. '''
     try:
         output_directory = fd.askdirectory()
         # Open a serial connection (modify 'COMX' to your Arduino's serial port)
