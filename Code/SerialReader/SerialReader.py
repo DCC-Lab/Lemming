@@ -19,15 +19,25 @@ status_label.pack(ipadx=100, ipady=50)
 
 def assign_port_values():
     ''' Re-builds the list of values for the combo box. '''
-    port_selector["values"] = serial.tools.list_ports.comports()
+    comports = serial.tools.list_ports.comports()
+    port_selector["values"] = comports
+    selected_port = 0
+    index = 0
+    for i in comports:
+        if i.pid == 29987 and i.vid == 6790:
+            selected_port = index
+        
+        index += 1
+        
+    return selected_port
 
 #The post command is called every time the user opens the combo box.
 port_selector = ttk.Combobox(window, textvariable=tk.StringVar(), postcommand=assign_port_values)
 port_selector.pack(ipadx=100, pady=25)
 
-assign_port_values() #First refresh.
+detected_index = assign_port_values() #First refresh.
 
-port_selector.current(0)
+port_selector.current(detected_index)
 
 
 def resource_path(relative_path):
