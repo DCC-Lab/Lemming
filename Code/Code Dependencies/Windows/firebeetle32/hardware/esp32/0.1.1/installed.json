@@ -1,0 +1,219 @@
+{
+  "packages": [
+    {
+      "name": "firebeetle32",
+      "maintainer": "DFRobot DFRDuino",
+      "websiteUrl": "https://github.com/espressif/arduino-esp32",
+      "Url": "http://download.dfrobot.top/FireBeetle/package_esp32_index.json",
+      "email": "hristo@espressif.com",
+      "platforms": [
+        {
+          "name": "FireBeetle-ESP32 Mainboard",
+          "architecture": "esp32",
+          "version": "0.1.1",
+          "deprecated": false,
+          "category": "ESP32",
+          "url": "http://download3.dfrobot.com.cn/FireBeetle/DFRobot_FireBeetle-ESP32-0.1.1.zip",
+          "archiveFileName": "DFRobot_FireBeetle-ESP32-0.1.1.zip",
+          "checksum": "SHA-256:f4ab9b993d884392944e0b888266a9acda6618cabccb12b709e2c2bbf183210b",
+          "size": "35967684",
+          "boards": [
+            {
+              "name": "FireBettle-ESP32"
+            }
+          ],
+          "help": {},
+          "toolsDependencies": [
+            {
+              "packager": "firebeetle32",
+              "name": "xtensa-esp32-elf-gcc",
+              "version": "1.22.0-80-g6c4433a-5.2.0"
+            },
+            {
+              "packager": "firebeetle32",
+              "name": "esptool_py",
+              "version": "2.6.1"
+            },
+            {
+              "packager": "firebeetle32",
+              "name": "mkspiffs",
+              "version": "0.2.3"
+            }
+          ],
+          "discoveryDependencies": [],
+          "monitorDependencies": []
+        }
+      ],
+      "tools": [
+        {
+          "name": "xtensa-esp32-elf-gcc",
+          "version": "1.22.0-80-g6c4433a-5.2.0",
+          "systems": [
+            {
+              "host": "i686-mingw32",
+              "url": "http://download.dfrobot.top/FireBeetle/tools/xtensa-esp32-elf-win32-1.22.0-80-g6c4433a-5.2.0.zip",
+              "archiveFileName": "xtensa-esp32-elf-win32-1.22.0-80-g6c4433a-5.2.0.zip",
+              "size": "125719261",
+              "checksum": "SHA-256:f217fccbeaaa8c92db239036e0d6202458de4488b954a3a38f35ac2ec48058a4"
+            },
+            {
+              "host": "x86_64-apple-darwin",
+              "url": "http://download.dfrobot.top/FireBeetle/tools/xtensa-esp32-elf-osx-1.22.0-80-g6c4433a-5.2.0.tar.gz",
+              "archiveFileName": "xtensa-esp32-elf-osx-1.22.0-80-g6c4433a-5.2.0.tar.gz",
+              "size": "46517409",
+              "checksum": "SHA-256:a4307a97945d2f2f2745f415fbe80d727750e19f91f9a1e7e2f8a6065652f9da"
+            },
+            {
+              "host": "x86_64-pc-linux-gnu",
+              "url": "http://download.dfrobot.top/FireBeetle/tools/xtensa-esp32-elf-linux64-1.22.0-80-g6c4433a-5.2.0.tar.gz",
+              "archiveFileName": "xtensa-esp32-elf-linux64-1.22.0-80-g6c4433a-5.2.0.tar.gz",
+              "size": "44219107",
+              "checksum": "SHA-256:3fe96c151d46c1d4e5edc6ed690851b8e53634041114bad04729bc16b0445156"
+            },
+            {
+              "host": "i686-pc-linux-gnu",
+              "url": "http://download.dfrobot.top/FireBeetle/tools/xtensa-esp32-elf-linux32-1.22.0-80-g6c4433a-5.2.0.tar.gz",
+              "archiveFileName": "xtensa-esp32-elf-linux32-1.22.0-80-g6c4433a-5.2.0.tar.gz",
+              "size": "45566336",
+              "checksum": "SHA-256:b4055695ffc2dfc0bcb6dafdc2572a6e01151c4179ef5fa972b3fcb2183eb155"
+            },
+            {
+              "host": "arm-linux-gnueabihf",
+              "url": "http://download.dfrobot.top/FireBeetle/tools/xtensa-esp32-elf-linux-armel-1.22.0-87-gb57bad3-5.2.0.tar.gz",
+              "archiveFileName": "xtensa-esp32-elf-linux-armel-1.22.0-87-gb57bad3-5.2.0.tar.gz",
+              "size": "50655584",
+              "checksum": "SHA-256:9c68c87bb23b1256dc0a1859b515946763e5292dcab4a4159a52fae5618ce861"
+            }
+          ]
+        },
+        {
+          "name": "xtensa-esp32-elf-gcc",
+          "version": "1.22.0-61-gab8375a-5.2.0",
+          "systems": [
+            {
+              "host": "i686-mingw32",
+              "url": "http://download3.dfrobot.com.cn/FireBeetle/xtensa-esp32-elf-win32-1.22.0-61-gab8375a-5.2.0.zip",
+              "archiveFileName": "xtensa-esp32-elf-win32-1.22.0-61-gab8375a-5.2.0.zip",
+              "size": "76346909",
+              "checksum": "SHA-256:c00dbdab8e8acc273d4aa319a74f7bb1d9496c843159823201d685359174168f"
+            },
+            {
+              "host": "x86_64-apple-darwin",
+              "url": "http://download3.dfrobot.com.cn/FireBeetle/xtensa-esp32-elf-osx-1.22.0-61-gab8375a-5.2.0.tar.gz",
+              "archiveFileName": "xtensa-esp32-elf-osx-1.22.0-61-gab8375a-5.2.0.tar.gz",
+              "size": "40481812",
+              "checksum": "SHA-256:89a9a6084ec032ddcd4bdae37b428e533ed5fd0c0ab6b66ddf703e4b3f83d6e4"
+            },
+            {
+              "host": "x86_64-pc-linux-gnu",
+              "url": "http://download3.dfrobot.com.cn/FireBeetle/xtensa-esp32-elf-linux64-1.22.0-61-gab8375a-5.2.0.tar.gz",
+              "archiveFileName": "xtensa-esp32-elf-linux64-1.22.0-61-gab8375a-5.2.0.tar.gz",
+              "size": "37674568",
+              "checksum": "SHA-256:b74333fd7f622f035fee7c4e0ca57c3e2ccb2515de5d901f33e87e79cdf0d4f9"
+            },
+            {
+              "host": "i686-pc-linux-gnu",
+              "url": "http://download3.dfrobot.com.cn/FireBeetle/xtensa-esp32-elf-linux32-1.22.0-61-gab8375a-5.2.0.tar.gz",
+              "archiveFileName": "xtensa-esp32-elf-linux32-1.22.0-59.tar.gz",
+              "size": "41032647",
+              "checksum": "SHA-256:dbb342b7c377a7c3a1fcccc60fa1193332d0c37e6a90c5075d3471c13c9e94ad"
+            }
+          ]
+        },
+        {
+          "name": "esptool_py",
+          "version": "2.6.1",
+          "systems": [
+            {
+              "host": "i686-mingw32",
+              "url": "http://download.dfrobot.top/FireBeetle/tools/esptool-2.6.1-windows.zip",
+              "archiveFileName": "esptool-2.6.1-windows.zip",
+              "size": "3422445",
+              "checksum": "SHA-256:84cf0b369a7707fe566434faba148852fc464992111d5baa95b658b374802f96"
+            },
+            {
+              "host": "x86_64-apple-darwin",
+              "url": "http://download.dfrobot.top/FireBeetle/tools/esptool-2.6.1-macos.tar.gz",
+              "archiveFileName": "esptool-2.6.1-macos.tar.gz",
+              "size": "3837085",
+              "checksum": "SHA-256:f4eb758a301d6902cc9dfcd49d36345d2f075ad123da7cf8132d15cfb7533457"
+            },
+            {
+              "host": "x86_64-pc-linux-gnu",
+              "url": "http://download.dfrobot.top/FireBeetle/tools/esptool-2.6.1-linux.tar.gz",
+              "archiveFileName": "esptool-2.6.1-linux.tar.gz",
+              "size": "44762",
+              "checksum": "SHA-256:eaf82ff4070d9792f6a42ae1e485375de5a87bec59ef01dfb95de901519ec7fb"
+            },
+            {
+              "host": "i686-pc-linux-gnu",
+              "url": "http://download.dfrobot.top/FireBeetle/tools/esptool-2.6.1-linux.tar.gz",
+              "archiveFileName": "esptool-2.6.1-linux.tar.gz",
+              "size": "44762",
+              "checksum": "SHA-256:eaf82ff4070d9792f6a42ae1e485375de5a87bec59ef01dfb95de901519ec7fb"
+            },
+            {
+              "host": "arm-linux-gnueabihf",
+              "url": "http://download.dfrobot.top/FireBeetle/tools/esptool-2.6.1-linux.tar.gz",
+              "archiveFileName": "esptool-2.6.1-linux.tar.gz",
+              "size": "44762",
+              "checksum": "SHA-256:eaf82ff4070d9792f6a42ae1e485375de5a87bec59ef01dfb95de901519ec7fb"
+            }
+          ]
+        },
+        {
+          "name": "mkspiffs",
+          "version": "0.2.3",
+          "systems": [
+            {
+              "host": "i686-mingw32",
+              "url": "http://download3.dfrobot.com.cn/FireBeetle/mkspiffs-0.2.3-arduino-esp32-win32.zip",
+              "archiveFileName": "mkspiffs-0.2.3-arduino-esp32-win32.zip",
+              "size": "249809",
+              "checksum": "SHA-256:b647f2c2efe6949819c85ea9404271b55c7c9c25bcb98d3b98a1d0ba771adf56"
+            },
+            {
+              "host": "x86_64-apple-darwin",
+              "url": "http://download.dfrobot.top/FireBeetle/tools/mkspiffs-0.2.3-arduino-esp32-osx.tar.gz",
+              "archiveFileName": "mkspiffs-0.2.3-arduino-esp32-osx.tar.gz",
+              "size": "130270",
+              "checksum": "SHA-256:9f43fc74a858cf564966b5035322c3e5e61c31a647c5a1d71b388ed6efc48423"
+            },
+            {
+              "host": "i386-apple-darwin",
+              "url": "http://download.dfrobot.top/FireBeetle/tools/mkspiffs-0.2.3-arduino-esp32-osx.tar.gz",
+              "archiveFileName": "mkspiffs-0.2.3-arduino-esp32-osx.tar.gz",
+              "size": "130270",
+              "checksum": "SHA-256:9f43fc74a858cf564966b5035322c3e5e61c31a647c5a1d71b388ed6efc48423"
+            },
+            {
+              "host": "x86_64-pc-linux-gnu",
+              "url": "http://download.dfrobot.top/FireBeetle/tools/mkspiffs-0.2.3-arduino-esp32-linux64.tar.gz",
+              "archiveFileName": "mkspiffs-0.2.3-arduino-esp32-linux64.tar.gz",
+              "size": "50646",
+              "checksum": "SHA-256:5e1a4ff41385e842f389f6b5254102a547e566a06b49babeffa93ef37115cb5d"
+            },
+            {
+              "host": "i686-pc-linux-gnu",
+              "url": "http://download.dfrobot.top/FireBeetle/tools/mkspiffs-0.2.3-arduino-esp32-linux32.tar.gz",
+              "archiveFileName": "mkspiffs-0.2.3-arduino-esp32-linux32.tar.gz",
+              "size": "48751",
+              "checksum": "SHA-256:464463a93e8833209cdc29ba65e1a12fec31718dc10075c195a2445b2c3f6cb0"
+            },
+            {
+              "host": "arm-linux-gnueabihf",
+              "url": "http://download.dfrobot.top/FireBeetle/tools/mkspiffs-0.2.3-arduino-esp32-linux-armhf.tar.gz",
+              "archiveFileName": "mkspiffs-0.2.3-arduino-esp32-linux-armhf.tar.gz",
+              "size": "40665",
+              "checksum": "SHA-256:ade3dc00117912ac08a1bdbfbfe76b12d21a34bc5fa1de0cfc45fe7a8d0a0185"
+            }
+          ]
+        }
+      ],
+      "help": {
+        "online": "http://esp32.com"
+      }
+    }
+  ],
+  "IsTrusted": false
+}
