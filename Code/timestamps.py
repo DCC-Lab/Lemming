@@ -86,12 +86,12 @@ class LemmingDataDirectory(Path):
         return len(self.datafilepaths)
 
     @property
-    def all_possible_timestamps_entries(self):
+    def possible_timestamps_entries(self):
         self.timestamp_entries.sort(key= lambda entry : entry['event'] )
         return self.timestamp_entries
 
     @property
-    def corrected_timestamps(self):
+    def corrected_timestamps_entries(self):
         """
         The general idea here is simple: all events occurred sequentially and their time MUST
         also be sequential in the same order. Starting with event 0001, we need to find event 0002
@@ -234,15 +234,15 @@ class TestFilenames(unittest.TestCase):
 
     def test_data_directory_all_timestamps_entries(self):
         testdir = LemmingDataDirectory("testdata_timestamps")
-        self.assertTrue(len(testdir.all_possible_timestamps_entries) > testdir.datafile_count)
+        self.assertTrue(len(testdir.possible_timestamps_entries) > testdir.datafile_count)
 
     def test_data_directory_all_corrected_timestamps(self):
         testdir = LemmingDataDirectory("testdata_timestamps")
-        self.assertTrue(len(testdir.corrected_timestamps) == testdir.datafile_count)
+        self.assertTrue(len(testdir.corrected_timestamps_entries) == testdir.datafile_count)
 
 
 if __name__ == "__main__":
-    unittest.main() # Un comment to run code below
+    # unittest.main() # Un comment to run code below
 
     testdir = LemmingDataDirectory("testdata_timestamps")
 
@@ -256,11 +256,11 @@ if __name__ == "__main__":
         print(f"    {len(filepath.timestamp_entries)} option(s): " +", ".join([ str(entry['time']) for entry in filepath.timestamp_entries ]))
 
     print("--- All possible corrected file paths for each data file path ---")
-    for timestamp_entry in testdir.all_possible_timestamps_entries:
+    for timestamp_entry in testdir.possible_timestamps_entries:
         print(f"{timestamp_entry['corrected_filepath']} -> {timestamp_entry['original_filepath']}")
 
     print("--- Unique option for each data file path ---")
-    for timestamp_entry in testdir.corrected_timestamps:
+    for timestamp_entry in testdir.corrected_timestamps_entries:
         print(f"{timestamp_entry['corrected_filepath']} -> {timestamp_entry['original_filepath']}")
 
 
