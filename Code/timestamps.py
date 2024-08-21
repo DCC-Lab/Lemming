@@ -24,21 +24,21 @@ class TimestampPath(Path):
                 for hours in [d1,d2]:
                     for days in [d1,d2]:
                         for months in [d1,d2]:
-                            patterns.append(f"{uid}.*-{year}{months}{days}{hours}{mins}{secs}")
+                            patterns.append(f"^{uid}.*-{year}{months}{days}{hours}{mins}{secs}$")
 
         return patterns
 
     def get_possible_timestamps(self):
         patterns = self.get_possible_matching_patterns()
 
-        timestamp = str(self)
+        filename = self.name # Don't use directory in name
 
         entries = []
         for pattern in patterns:
             entry = {}
-            match = re.search(pattern, timestamp)
+            match = re.search(pattern, filename)
             if match is not None:
-                entry['uid'] = int(match.group(1))
+                entry['event'] = int(match.group(1))
                 entry['year'] = int(match.group(2))
                 if entry['year'] < 2020 or entry['year'] > 2050:
                     continue
@@ -62,143 +62,40 @@ class TimestampPath(Path):
 
         return entries
 
-def extract_number_in_range(text, min, max):
-    options = []
-
-    with suppress(IndexError, ValueError):
-        option1 = int(text[0])
-        if option1 >= min and option1 <= max:
-            options.append( (option1, text[1:]) )
-
-    with suppress(IndexError, ValueError):
-        option2 = int(text[0:2])
-        if option2 >= min and option2 <= max:
-            options.append( (option2, text[2:]) )
-
-    return options
-
-def extract_possible_months(entry):
-    updated_entries = []
-
-    possible_months = extract_number_in_range(entry['leftover'],1, 12)
-    for month, leftover in possible_months:
-        updated_entry = dict(entry)
-        updated_entry['month'] = month
-        updated_entry['leftover'] = leftover
-        updated_entries.append(updated_entry)
-
-    return updated_entries
-
-def extract_possible_days(entry):
-    updated_entries = []
-
-    possible_days = extract_number_in_range(entry['leftover'],1, 31)
-    for day, leftover in possible_days:
-        updated_entry = dict(entry)
-        updated_entry['day'] = day
-        updated_entry['leftover'] = leftover
-        updated_entries.append(updated_entry)
-
-    return updated_entries
-
-def extract_possible_hours(entry):
-    updated_entries = []
-
-    possible_hours = extract_number_in_range(entry['leftover'],0, 23)
-    for hours, leftover in possible_hours:
-        updated_entry = dict(entry)
-        updated_entry['hours'] = hours
-        updated_entry['leftover'] = leftover
-        updated_entries.append(updated_entry)
-
-    return updated_entries
-
-def extract_possible_minutes(entry):
-    updated_entries = []
-
-    possible_minutes = extract_number_in_range(entry['leftover'],0, 59)
-    for minutes, leftover in possible_minutes:
-        updated_entry = dict(entry)
-        updated_entry['minutes'] = minutes
-        updated_entry['leftover'] = leftover
-        updated_entries.append(updated_entry)
-
-    return updated_entries
-
-def extract_possible_seconds(entry):
-    updated_entries = []
-
-    possible_seconds = extract_number_in_range(entry['leftover'],0, 59)
-    for seconds, leftover in possible_seconds:
-        updated_entry = dict(entry)
-        updated_entry['seconds'] = seconds
-        updated_entry['leftover'] = leftover
-        updated_entries.append(updated_entry)
-
-    return updated_entries
 
 class TestFilenames(unittest.TestCase):
     def test_init(self):
         self.assertTrue(True)
 
-    def test_path(self):
-        path = Path("/Users/dccote/Downloads/data")
-        self.assertTrue(path.exists())
+    def test_timestamp_path(self):
+        path1 = TimestampPath("0001-startFile-202475182821")
+        self.assertIsNotNone(path1)
+
+        path2 = TimestampPath("0002-202475182821")
+        self.assertIsNotNone(path2)
+
+    def test_timestamp_path_entries(self):
+        path1 = TimestampPath("0001-startFile-202475182821")
+        self.assertTrue(len(path1.entries) >= 1)
 
     def setUp(self):
-        self.path = Path("/Users/dccote/Downloads/data")
-
+        self.path = Path("testdata_timestamps")
         files = os.listdir(self.path)
         files.sort()
 
+        self.filepaths = [ TimestampPath(filename) for filename in files]
+        self.filepaths = [ filepath for filepath in self.filepaths if len(filepath.entries) >= 1] # Remove files not matching anything
+
         self.entries = []
-        for filepath in files:
-            match = re.search(r"(\d{4}).*-(2024)(\d+)", filepath)
-            if match is not None:
-                self.entries.append({"id":match.group(1), "year":int(match.group(2)), "timestamp":match.group(3), "leftover":match.group(3)})
+        for filepath in self.filepaths:
+            self.entries.extend(filepath.entries)
+
+
 
     def test_extract_general_case(self):
-        updated_entries = []
-        for entry in self.entries:
-            multiple_new_entries = extract_possible_months(entry)
-            updated_entries.extend(multiple_new_entries)
 
-        self.entries = updated_entries  
-
-        updated_entries = []
-        for entry in self.entries:
-            multiple_new_entries = extract_possible_days(entry)
-            updated_entries.extend(multiple_new_entries)
-
-        self.entries = updated_entries
-
-        updated_entries = []
-        for entry in self.entries:
-            multiple_new_entries = extract_possible_hours(entry)
-            updated_entries.extend(multiple_new_entries)
-
-        self.entries = updated_entries
-
-        updated_entries = []
-        for entry in self.entries:
-            multiple_new_entries = extract_possible_minutes(entry)
-            updated_entries.extend(multiple_new_entries)
-
-        self.entries = updated_entries
-
-        updated_entries = []
-        for entry in self.entries:
-            multiple_new_entries = extract_possible_seconds(entry)
-            updated_entries.extend(multiple_new_entries)
-
-        self.entries = updated_entries
-        for entry in self.entries:
-            entry['time'] = datetime(year=entry['year'], month=entry['month'], day=entry['day'], hour=entry['hours'], minute=entry['minutes'], second=entry['seconds'])
-
-        # Step 1: remove if it did not reach the end of the string (means leftover characters, so has to be wrong)
-        self.entries = [ entry for entry in self.entries if len(entry['leftover']) == 0]
-
-        # Step 2: remove duplicates (for some reason they appear). We cannot use a set with a dict, do it manually
+        # Step 1: remove duplicates (for some reason they appear when there is 02 and 2 for instance). 
+        # We cannot use a set with a dict, do it manually
         entries_without_duplicates = self.entries.copy() 
         for entry in self.entries:
             entries_without_duplicates.remove(entry) # removes first encountered only
@@ -208,8 +105,8 @@ class TestFilenames(unittest.TestCase):
 
         self.entries = entries_without_duplicates
 
-        # Step 3: Two entries with same id less than 5 minutes apart are considered equal, second one is dropped
-        self.entries.sort(key= lambda entry : (entry['id'], entry['time']) )
+        # Step 2: Two entries with same id less than 5 minutes apart are considered equal, second one is dropped
+        self.entries.sort(key= lambda entry : (entry['event'], entry['time']) )
 
         entries_without_very_close_times = []
         entries_without_very_close_times.append(self.entries[0]) # First for sure
@@ -217,28 +114,28 @@ class TestFilenames(unittest.TestCase):
         for i in range(1, len(self.entries)):
             entry2 = self.entries[i]
             entry1 = self.entries[i-1]
-            if entry1['id'] == entry2['id'] and (entry2['time']-entry1['time']).total_seconds() < 5*60:
+            if entry1['event'] == entry2['event'] and (entry2['time']-entry1['time']).total_seconds() < 5*60:
                 pass # Too close to prior time (essentially equivalent)
-            # if entry1['id'] != entry2['id'] and  (entry2['time']-entry1['time']).total_seconds() < 0:
+            # if entry1['event'] != entry2['event'] and  (entry2['time']-entry1['time']).total_seconds() < 0:
             #     pass # Entry2 has to be wrong: is before previous entry1 on different event
             else:
                 entries_without_very_close_times.append(entry2)
 
         self.entries = entries_without_very_close_times
 
-        # Step 4: If ordered by time first, then id, we MUST be able to find
+        # Step 3: If ordered by time first, then id, we MUST be able to find
         # ids sequentially (0001, 0002, etc...) If we find others in the way, 
         # they have to be wrong
-        self.entries.sort(key= lambda entry : (entry['time'],entry['id']) )
+        self.entries.sort(key= lambda entry : (entry['time'],entry['event']) )
 
         in_order = []
         entries = self.entries.copy()
         uid = 1
-        count_unique_ids = len(set([int(e['id']) for e in self.entries]))
+        count_unique_ids = len(set([int(e['event']) for e in self.entries]))
 
         while uid <= count_unique_ids:
             entry = entries.pop(0)
-            if int(entry['id']) == uid:
+            if int(entry['event']) == uid:
                 in_order.append(entry)
                 uid += 1
 
@@ -246,19 +143,10 @@ class TestFilenames(unittest.TestCase):
 
         # We are done and there was no error
         for entry in self.entries:
-            print(entry['id'],"\t", entry['time'])
+            print(entry['event'],"\t", entry['time'])
 
 
-    def test_timestamp_path(self):
-        path1 = TimestampPath("0001-startFile-202475182821")
-        self.assertIsNotNone(path1)
-        path2 = TimestampPath("0002-202475182821")
-        self.assertIsNotNone(path2)
-
-    def test_timestamp_path_entries(self):
-        path1 = TimestampPath("0001-startFile-202475182821")
-        print(path1.entries)
-
+    @unittest.skip('Experimenting with algos')
     def test_create_regex(self):
         d1 = r"(\d)"    # One digit
         d2 = r"(\d\d)"  # Two digits
@@ -299,7 +187,49 @@ class TestFilenames(unittest.TestCase):
                 entry['time'] = datetime(year=entry['year'], month=entry['month'], day=entry['day'], hour=entry['hours'], minute=entry['minutes'], second=entry['seconds'])
                 entries.append(entry)
 
-        print(entries)
+    def test_filepaths_with_dir(self):
+        files = os.listdir(self.path)
+        files.sort()
+
+        filepaths = [ TimestampPath(filename) for filename in files]
+        filepaths = [ filepath for filepath in filepaths if len(filepath.entries) >= 1] # Remove files not matching anything
+        self.assertEqual(len(filepaths), 233) # With test_data
+
+        entries = []
+        for filepath in filepaths:
+            self.assertTrue(len(filepath.entries) >= 1, filepath)
+            entries.extend(filepath.entries)
+
+        count_unique_ids = len(set([int(e['event']) for e in entries]))
+        self.assertEqual(count_unique_ids, len(filepaths))
+
+    def test_filepaths_cleanup(self):
+        files = os.listdir(self.path)
+        files.sort()
+
+        filepaths = [ TimestampPath(filename) for filename in files]
+        filepaths = [ filepath for filepath in filepaths if len(filepath.entries) >= 1] # Remove files not matching anything    
+
+        self.entries.sort(key= lambda entry : (entry['time'],entry['event']) )
+        count_unique_ids = len(set([int(e['event']) for e in self.entries]))
+        self.assertEqual(count_unique_ids, 233)
+
+        final_entries = []
+        entries = self.entries.copy()
+        uid = 1 # Start at 1
+        while uid <= count_unique_ids:
+            entry = entries.pop(0)
+            if int(entry['event']) == uid:
+                final_entries.append(entry)
+                uid += 1
+
+        entries = final_entries
+
+        # We are done and there was no error
+        for entry in final_entries:
+            print(entry['event'],"\t", entry['time'])
+
+
 
 
 
