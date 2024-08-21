@@ -10,7 +10,7 @@ class TimestampPath(Path):
     def __init__(self, *args):
         super().__init__(*args)
         
-        self.entries = self.get_possible_timestamps()
+        self.timestamp_entries = self.get_possible_timestamps()
 
     def get_possible_matching_patterns(self):
         d1 = r"(\d)"      # One digit
@@ -24,7 +24,7 @@ class TimestampPath(Path):
                 for hours in [d1,d2]:
                     for days in [d1,d2]:
                         for months in [d1,d2]:
-                            patterns.append(f"^{uid}.*-{year}{months}{days}{hours}{mins}{secs}$")
+                            patterns.append(f"^{uid}(.*)-{year}{months}{days}{hours}{mins}{secs}$")
 
         return patterns
 
@@ -39,30 +39,82 @@ class TimestampPath(Path):
             match = re.search(pattern, filename)
             if match is not None:
                 entry['event'] = int(match.group(1))
-                entry['year'] = int(match.group(2))
+                entry['start-marker'] = match.group(2) # can be empty
+                entry['year'] = int(match.group(3))
                 if entry['year'] < 2020 or entry['year'] > 2050:
                     continue
-                entry['month'] = int(match.group(3))
+                entry['month'] = int(match.group(4))
                 if entry['month'] > 12 or entry['month'] < 1:
                     continue
-                entry['day'] = int(match.group(4))
+                entry['day'] = int(match.group(5))
                 if entry['day'] > 31 or entry['day'] < 1:
                     continue
-                entry['hours'] = int(match.group(5))
+                entry['hours'] = int(match.group(6))
                 if entry['hours'] >= 24:
                     continue
-                entry['minutes'] = int(match.group(6))
+                entry['minutes'] = int(match.group(7))
                 if entry['minutes'] >= 60:
                     continue
-                entry['seconds'] = int(match.group(7))
+                entry['seconds'] = int(match.group(8))
                 if entry['seconds'] >= 60:
                     continue
                 entry['time'] = datetime(year=entry['year'], month=entry['month'], day=entry['day'], hour=entry['hours'], minute=entry['minutes'], second=entry['seconds'])
+                entry['corrected_filepath'] = f"{entry['event']:04d}{entry['start-marker']}-{entry['year']:02d}{entry['month']:02d}{entry['day']:02d}{entry['hours']:02d}{entry['minutes']:02d}{entry['seconds']:02d}"
+                entry['original_filepath'] = str(self)
                 entries.append(entry)
 
         return entries
 
+class LemmingDataDirectory(Path):
+    def __init__(self, *args):
+        super().__init__(*args)
 
+        if not self.is_dir() or not self.exists() :
+            ValueError('LemmingDataDirectory must be an existing directory')
+
+        datafilenames = os.listdir(self)
+
+        self.datafilepaths = [ TimestampPath(datafilename) for datafilename in datafilenames]
+        self.datafilepaths = [ datafilepath for datafilepath in self.datafilepaths if len(datafilepath.timestamp_entries) >= 1] # Remove files not matching data file
+
+        self.timestamp_entries = []
+        for filepath in self.datafilepaths:
+            self.timestamp_entries.extend(filepath.timestamp_entries)
+
+    @property
+    def datafile_count(self):
+        return len(self.datafilepaths)
+
+    @property
+    def all_possible_timestamps(self):
+        self.timestamp_entries.sort(key= lambda entry : (entry['time'],entry['event']) )
+        return self.timestamp_entries
+
+    @property
+    def corrected_timestamps(self):
+        """
+        The general idea here is simple: all events occurred sequentially and their time MUST
+        also be sequential in the same order. Starting with event 0001, we need to find event 0002
+        and anything that is not event 0002 is obviously incorrect because event 0018 cannot be 
+        before event 0002 for instance. We keep going until the end.
+        This works well here but could fail. Also, the first correct event is kept, not sure 
+        how to check if the second (or third or fifth) occurence was in fact the best one.
+        """
+        count_unique_ids = self.datafile_count
+
+        self.timestamp_entries.sort(key= lambda entry : (entry['time'],entry['event']) )
+
+        corrected_entries = []
+        entries = self.timestamp_entries.copy()
+        uid = 1 # Start at 1
+        while uid <= count_unique_ids:
+            entry = entries.pop(0)
+            if entry['event'] == uid:
+                corrected_entries.append(entry)
+                uid += 1
+
+        return corrected_entries
+        
 class TestFilenames(unittest.TestCase):
     def test_init(self):
         self.assertTrue(True)
@@ -76,7 +128,7 @@ class TestFilenames(unittest.TestCase):
 
     def test_timestamp_path_entries(self):
         path1 = TimestampPath("0001-startFile-202475182821")
-        self.assertTrue(len(path1.entries) >= 1)
+        self.assertTrue(len(path1.timestamp_entries) >= 1)
 
     def setUp(self):
         self.path = Path("testdata_timestamps")
@@ -84,67 +136,11 @@ class TestFilenames(unittest.TestCase):
         files.sort()
 
         self.filepaths = [ TimestampPath(filename) for filename in files]
-        self.filepaths = [ filepath for filepath in self.filepaths if len(filepath.entries) >= 1] # Remove files not matching anything
+        self.filepaths = [ filepath for filepath in self.filepaths if len(filepath.timestamp_entries) >= 1] # Remove files not matching anything
 
-        self.entries = []
+        self.timestamp_entries = []
         for filepath in self.filepaths:
-            self.entries.extend(filepath.entries)
-
-
-
-    def test_extract_general_case(self):
-
-        # Step 1: remove duplicates (for some reason they appear when there is 02 and 2 for instance). 
-        # We cannot use a set with a dict, do it manually
-        entries_without_duplicates = self.entries.copy() 
-        for entry in self.entries:
-            entries_without_duplicates.remove(entry) # removes first encountered only
-            if entry not in entries_without_duplicates:
-                # put it back
-                entries_without_duplicates.append(entry)
-
-        self.entries = entries_without_duplicates
-
-        # Step 2: Two entries with same id less than 5 minutes apart are considered equal, second one is dropped
-        self.entries.sort(key= lambda entry : (entry['event'], entry['time']) )
-
-        entries_without_very_close_times = []
-        entries_without_very_close_times.append(self.entries[0]) # First for sure
-
-        for i in range(1, len(self.entries)):
-            entry2 = self.entries[i]
-            entry1 = self.entries[i-1]
-            if entry1['event'] == entry2['event'] and (entry2['time']-entry1['time']).total_seconds() < 5*60:
-                pass # Too close to prior time (essentially equivalent)
-            # if entry1['event'] != entry2['event'] and  (entry2['time']-entry1['time']).total_seconds() < 0:
-            #     pass # Entry2 has to be wrong: is before previous entry1 on different event
-            else:
-                entries_without_very_close_times.append(entry2)
-
-        self.entries = entries_without_very_close_times
-
-        # Step 3: If ordered by time first, then id, we MUST be able to find
-        # ids sequentially (0001, 0002, etc...) If we find others in the way, 
-        # they have to be wrong
-        self.entries.sort(key= lambda entry : (entry['time'],entry['event']) )
-
-        in_order = []
-        entries = self.entries.copy()
-        uid = 1
-        count_unique_ids = len(set([int(e['event']) for e in self.entries]))
-
-        while uid <= count_unique_ids:
-            entry = entries.pop(0)
-            if int(entry['event']) == uid:
-                in_order.append(entry)
-                uid += 1
-
-        self.entries = in_order
-
-        # We are done and there was no error
-        for entry in self.entries:
-            print(entry['event'],"\t", entry['time'])
-
+            self.timestamp_entries.extend(filepath.timestamp_entries)
 
     @unittest.skip('Experimenting with algos')
     def test_create_regex(self):
@@ -192,17 +188,18 @@ class TestFilenames(unittest.TestCase):
         files.sort()
 
         filepaths = [ TimestampPath(filename) for filename in files]
-        filepaths = [ filepath for filepath in filepaths if len(filepath.entries) >= 1] # Remove files not matching anything
-        self.assertEqual(len(filepaths), 233) # With test_data
+        filepaths = [ filepath for filepath in filepaths if len(filepath.timestamp_entries) >= 1] # Remove files not matching anything
+        self.assertEqual(len(filepaths), 233) # With current test_data
 
         entries = []
         for filepath in filepaths:
-            self.assertTrue(len(filepath.entries) >= 1, filepath)
-            entries.extend(filepath.entries)
+            self.assertTrue(len(filepath.timestamp_entries) >= 1, filepath)
+            entries.extend(filepath.timestamp_entries)
 
         count_unique_ids = len(set([int(e['event']) for e in entries]))
         self.assertEqual(count_unique_ids, len(filepaths))
 
+    @unittest.skip('Algorithm development occurred here, everything was moved to class LemmingDataDirectory')
     def test_filepaths_cleanup(self):
         files = os.listdir(self.path)
         files.sort()
@@ -210,12 +207,12 @@ class TestFilenames(unittest.TestCase):
         filepaths = [ TimestampPath(filename) for filename in files]
         filepaths = [ filepath for filepath in filepaths if len(filepath.entries) >= 1] # Remove files not matching anything    
 
-        self.entries.sort(key= lambda entry : (entry['time'],entry['event']) )
-        count_unique_ids = len(set([int(e['event']) for e in self.entries]))
+        self.timestamp_entries.sort(key= lambda entry : (entry['time'],entry['event']) )
+        count_unique_ids = len(set([int(e['event']) for e in self.timestamp_entries]))
         self.assertEqual(count_unique_ids, 233)
 
         final_entries = []
-        entries = self.entries.copy()
+        entries = self.timestamp_entries.copy()
         uid = 1 # Start at 1
         while uid <= count_unique_ids:
             entry = entries.pop(0)
@@ -229,13 +226,24 @@ class TestFilenames(unittest.TestCase):
         for entry in final_entries:
             print(entry['event'],"\t", entry['time'])
 
+    def test_data_directory(self):
+        self.assertTrue(LemmingDataDirectory("testdata_timestamps").exists())
 
+    def test_data_directory_content(self):
+        self.assertTrue(LemmingDataDirectory("testdata_timestamps").datafile_count == 233) # My test data has 233
 
+    def test_data_directory_all_timestamps(self):
+        testdir = LemmingDataDirectory("testdata_timestamps")
+        self.assertTrue(len(testdir.all_possible_timestamps) > testdir.datafile_count)
 
-
+    def test_data_directory_all_timestamps(self):
+        testdir = LemmingDataDirectory("testdata_timestamps")
+        self.assertTrue(len(testdir.corrected_timestamps) == testdir.datafile_count)
 
 
 if __name__ == "__main__":
     unittest.main()
-    unittest.main(defaultTest=["TestFilenames.test_create_regex"])
+    testdir = LemmingLemmingDataDirectory("testdata_timestamps")
+    for timestamp_entry in testdir.corrected_timestamps:
+        print(f"{timestamp_entry['corrected_filepath']} -> {timestamp_entry['original_filepath']}")
 
