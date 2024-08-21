@@ -76,7 +76,7 @@ class LemmingDataDirectory(Path):
 
         self.datafilepaths = [ TimestampPath(datafilename) for datafilename in datafilenames]
         self.datafilepaths = [ datafilepath for datafilepath in self.datafilepaths if len(datafilepath.timestamp_entries) >= 1] # Remove files not matching data file
-
+        self.datafilepaths.sort()
         self.timestamp_entries = []
         for filepath in self.datafilepaths:
             self.timestamp_entries.extend(filepath.timestamp_entries)
@@ -86,8 +86,8 @@ class LemmingDataDirectory(Path):
         return len(self.datafilepaths)
 
     @property
-    def all_possible_timestamps(self):
-        self.timestamp_entries.sort(key= lambda entry : (entry['time'],entry['event']) )
+    def all_possible_timestamps_entries(self):
+        self.timestamp_entries.sort(key= lambda entry : entry['event'] )
         return self.timestamp_entries
 
     @property
@@ -232,18 +232,35 @@ class TestFilenames(unittest.TestCase):
     def test_data_directory_content(self):
         self.assertTrue(LemmingDataDirectory("testdata_timestamps").datafile_count == 233) # My test data has 233
 
-    def test_data_directory_all_timestamps(self):
+    def test_data_directory_all_timestamps_entries(self):
         testdir = LemmingDataDirectory("testdata_timestamps")
-        self.assertTrue(len(testdir.all_possible_timestamps) > testdir.datafile_count)
+        self.assertTrue(len(testdir.all_possible_timestamps_entries) > testdir.datafile_count)
 
-    def test_data_directory_all_timestamps(self):
+    def test_data_directory_all_corrected_timestamps(self):
         testdir = LemmingDataDirectory("testdata_timestamps")
         self.assertTrue(len(testdir.corrected_timestamps) == testdir.datafile_count)
 
 
 if __name__ == "__main__":
-    unittest.main()
-    testdir = LemmingLemmingDataDirectory("testdata_timestamps")
+    unittest.main() # Un comment to run code below
+
+    testdir = LemmingDataDirectory("testdata_timestamps")
+
+    print("--- All data file paths ---")
+    for filepath in testdir.datafilepaths:
+        print(f"{filepath}")
+
+    print("--- All options for each data file path ---")
+    for filepath in testdir.datafilepaths:
+        print(f"{filepath}")
+        print(f"    {len(filepath.timestamp_entries)} option(s): " +", ".join([ str(entry['time']) for entry in filepath.timestamp_entries ]))
+
+    print("--- All possible corrected file paths for each data file path ---")
+    for timestamp_entry in testdir.all_possible_timestamps_entries:
+        print(f"{timestamp_entry['corrected_filepath']} -> {timestamp_entry['original_filepath']}")
+
+    print("--- Unique option for each data file path ---")
     for timestamp_entry in testdir.corrected_timestamps:
         print(f"{timestamp_entry['corrected_filepath']} -> {timestamp_entry['original_filepath']}")
+
 
