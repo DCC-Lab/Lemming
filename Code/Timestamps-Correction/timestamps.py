@@ -8,26 +8,28 @@ from contextlib import suppress
 from datetime import datetime
 
 """
-PathLib is very differnt before Python 3.12.  The class Path is an abstract
+PathLib is very different before Python 3.12.  The class Path is an abstract
 class that makes use of __new__ to return a substitute class.  This is not meant
 to be easily subclassed. We need to find the Concrete class ourselves to avoid 
 issues, since the real class (PosixPath or WindowsPath) are standard classes
 that can be subclassed naturally. But then, all arguments to __init__ are not used
-(they are used implicitly by the __new__ method).
+(they are used implicitly by the __new__ method). This is handled in the __init__
+of the subclass
 
 Upgrade to 3.12, but this will work.
 """
-BaseClass = Path
-if sys.version_info.minor <= 11:
+if sys.version_info.minor >= 12:
+    BaseClass = Path
+else:
     BaseClass = PosixPath if os.name == 'posix' else WindowsPath
 
 class TimestampPath(BaseClass):
 
     def __init__(self, *args):
-        if sys.version_info.minor <= 11:
-            super().__init__()
-        else:
+        try:
             super().__init__(*args)
+        except TypeError:
+            super().__init__()
         
         self.timestamp_entries = self.get_possible_timestamps()
 
@@ -86,10 +88,10 @@ class TimestampPath(BaseClass):
 
 class LemmingDataDirectory(BaseClass):
     def __init__(self, *args):
-        if sys.version_info.minor <= 11:
-            super().__init__()
-        else:
+        try:
             super().__init__(*args)
+        except TypeError:
+            super().__init__()
 
         if not self.is_dir() or not self.exists() :
             ValueError('LemmingDataDirectory must be an existing directory')
