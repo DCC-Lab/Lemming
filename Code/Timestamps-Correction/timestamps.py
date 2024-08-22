@@ -273,23 +273,19 @@ class TestFilenames(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
-    unittest.main(defaultTest=['TestFilenames.test_00_init']) # Un comment to run code below
+    # unittest.main()
+    # unittest.main(defaultTest=['TestFilenames.test_00_init']) # Un comment to run code below
 
     testdir = LemmingDataDirectory("testdata_timestamps")
 
-    print("--- All data file paths ---")
-    for filepath in testdir.datafilepaths:
-        print(f"{filepath}")
+    # print("--- All data file paths ---")
+    # for filepath in testdir.datafilepaths:
+    #     print(f"{filepath}")
 
     print("--- All options for each data file path ---")
     for filepath in testdir.datafilepaths:
         print(f"{filepath}")
         print(f"    {len(filepath.timestamp_entries)} option(s): " +", ".join([ str(entry['time']) for entry in filepath.timestamp_entries ]))
-
-    print("--- All possible corrected file paths for each data file path ---")
-    for timestamp_entry in testdir.possible_timestamps_entries:
-        print(f"{timestamp_entry['corrected_filepath']} -> {timestamp_entry['original_filepath']}")
 
     print("--- Unique option for each data file path ---")
     for timestamp_entry in testdir.corrected_timestamps_entries:
