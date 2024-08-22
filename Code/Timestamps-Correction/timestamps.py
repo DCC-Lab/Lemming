@@ -119,14 +119,14 @@ class TestFilenames(unittest.TestCase):
     def test_init(self):
         self.assertTrue(True)
 
-    def test_timestamp_path(self):
+    def test_01_timestamp_path(self):
         path1 = TimestampPath("0001-startFile-202475182821")
         self.assertIsNotNone(path1)
 
         path2 = TimestampPath("0002-202475182821")
         self.assertIsNotNone(path2)
 
-    def test_timestamp_path_entries(self):
+    def test_02_timestamp_path_entries(self):
         path1 = TimestampPath("0001-startFile-202475182821")
         self.assertTrue(len(path1.timestamp_entries) >= 1)
 
@@ -143,7 +143,7 @@ class TestFilenames(unittest.TestCase):
             self.timestamp_entries.extend(filepath.timestamp_entries)
 
     @unittest.skip('Experimenting with algos')
-    def test_create_regex(self):
+    def test_03_create_regex(self):
         d1 = r"(\d)"    # One digit
         d2 = r"(\d\d)"  # Two digits
         year = r"(\d{4})"
@@ -183,7 +183,7 @@ class TestFilenames(unittest.TestCase):
                 entry['time'] = datetime(year=entry['year'], month=entry['month'], day=entry['day'], hour=entry['hours'], minute=entry['minutes'], second=entry['seconds'])
                 entries.append(entry)
 
-    def test_filepaths_with_dir(self):
+    def test_04_filepaths_with_dir(self):
         files = os.listdir(self.path)
         files.sort()
 
@@ -200,7 +200,7 @@ class TestFilenames(unittest.TestCase):
         self.assertEqual(count_unique_ids, len(filepaths))
 
     @unittest.skip('Algorithm development occurred here, everything was moved to class LemmingDataDirectory')
-    def test_filepaths_cleanup(self):
+    def test_05_filepaths_cleanup(self):
         files = os.listdir(self.path)
         files.sort()
 
@@ -226,23 +226,23 @@ class TestFilenames(unittest.TestCase):
         for entry in final_entries:
             print(entry['event'],"\t", entry['time'])
 
-    def test_data_directory(self):
+    def test_06_data_directory(self):
         self.assertTrue(LemmingDataDirectory("testdata_timestamps").exists())
 
-    def test_data_directory_content(self):
+    def test_07_data_directory_content(self):
         self.assertTrue(LemmingDataDirectory("testdata_timestamps").datafile_count == 233) # My test data has 233
 
-    def test_data_directory_all_timestamps_entries(self):
+    def test_08_data_directory_all_timestamps_entries(self):
         testdir = LemmingDataDirectory("testdata_timestamps")
         self.assertTrue(len(testdir.possible_timestamps_entries) > testdir.datafile_count)
 
-    def test_data_directory_all_corrected_timestamps(self):
+    def test_09_data_directory_all_corrected_timestamps(self):
         testdir = LemmingDataDirectory("testdata_timestamps")
         self.assertTrue(len(testdir.corrected_timestamps_entries) == testdir.datafile_count)
 
 
 if __name__ == "__main__":
-    # unittest.main() # Un comment to run code below
+    unittest.main() # Un comment to run code below
 
     testdir = LemmingDataDirectory("testdata_timestamps")
 
