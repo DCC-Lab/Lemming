@@ -4,13 +4,14 @@ from pathlib import Path
 import os
 from contextlib import suppress
 from datetime import datetime
-
+from numpy import mean, std
 
 class TimestampPath(Path):
     def __init__(self, *args):
         super().__init__(*args)
         
         self.timestamp_entries = self.get_possible_timestamps()
+
 
     def get_possible_matching_patterns(self):
         d1 = r"(\d)"      # One digit
@@ -28,10 +29,16 @@ class TimestampPath(Path):
 
         return patterns
 
+    def get_average_time_std(self):
+        times = [entry['time'].timestamp() for entry in self.timestamp_entries]
+        return mean(times), std(times)
+
     def get_possible_timestamps(self):
         patterns = self.get_possible_matching_patterns()
 
         filename = self.name # Don't use directory in name
+
+        extracted_times = []
 
         entries = []
         for pattern in patterns:
@@ -58,10 +65,17 @@ class TimestampPath(Path):
                 entry['seconds'] = int(match.group(8))
                 if entry['seconds'] >= 60:
                     continue
+
                 entry['time'] = datetime(year=entry['year'], month=entry['month'], day=entry['day'], hour=entry['hours'], minute=entry['minutes'], second=entry['seconds'])
+
                 entry['corrected_filepath'] = f"{entry['event']:04d}{entry['start-marker']}-{entry['year']:02d}{entry['month']:02d}{entry['day']:02d}{entry['hours']:02d}{entry['minutes']:02d}{entry['seconds']:02d}"
                 entry['original_filepath'] = str(self)
-                entries.append(entry)
+
+                if entry['time'] not in extracted_times: # Don't add times when identical
+                    entries.append(entry)
+                    extracted_times.append(entry['time'])
+                else:
+                    pass
 
         return entries
 
@@ -240,6 +254,61 @@ class TestFilenames(unittest.TestCase):
         testdir = LemmingDataDirectory("testdata_timestamps")
         self.assertTrue(len(testdir.corrected_timestamps_entries) == testdir.datafile_count)
 
+    def test_find_indexes_of_element(self):
+        numbers = [ 1,2,3,4,5,4,4,4,5,6,7,7,7,7]
+
+        self.assertEqual([i for i, x in enumerate(numbers) if x == 4], [3,5,6,7])
+
+    @unittest.skip('This is insane to think it is possible.  Too many possibilities')
+    def test_more_possibilities(self):
+        testdir = LemmingDataDirectory("testdata_timestamps")
+
+        testdir.timestamp_entries.sort(key= lambda entry : (entry['time'],entry['event']) )
+
+        all_options = [ ([], testdir.timestamp_entries) ]
+        for event in range(1, testdir.datafile_count):
+            options_for_next_event = []
+
+            for extracted, leftover in all_options:
+                options_for_this_event = self.extract_event_from_entries(extracted, leftover, event)
+                if options_for_this_event is not None:
+                    options_for_next_event.extend(options_for_this_event)
+                else:
+                    pass # This is an invalid option, we don't add it back
+
+            all_options = options_for_next_event
+
+        # for option in all_options:
+        #     self.assertEqual(len(option[0]), testdir.datafile_count )
+
+        print(len(all_options))
+        for j in range(testdir.datafile_count-1):
+            for i in range(len(all_options)):
+                extracted, leftover = all_options[i]
+                print( f"{extracted[j]['time']:.3f}\t", end='')
+            print()
+
+    def test_average_stddev(self):
+        testdir = LemmingDataDirectory("testdata_timestamps")
+
+        testdir.timestamp_entries.sort(key= lambda entry : (entry['time'],entry['event']) )
+
+        for filepath in testdir.datafilepaths:
+            print(filepath)
+
+    def extract_event_from_entries(self, extracted_entries, leftover_entries, event):
+        indexes = list([ind for ind, e in enumerate(leftover_entries) if e['event'] == event])
+        if len(indexes) == 0:
+            return None
+
+        options = []
+        for j in range(len(indexes)):
+            i = indexes[j]
+            entry = leftover_entries[i]
+            options.append( (extracted_entries+[leftover_entries[i]], leftover_entries[i+1:]) )
+
+        return options
+
 
 if __name__ == "__main__":
     # unittest.main() # Un comment to run code below
@@ -263,4 +332,12 @@ if __name__ == "__main__":
     for timestamp_entry in testdir.corrected_timestamps_entries:
         print(f"{timestamp_entry['corrected_filepath']} -> {timestamp_entry['original_filepath']}")
 
+    print("--- Time for each data file path ---")
+    time_offset = testdir.corrected_timestamps_entries[0]['time'].timestamp()
+    for timestamp_entry in testdir.corrected_timestamps_entries:
+        print(f"{timestamp_entry['time'].timestamp() - time_offset}")
 
+    # print("--- Average time and std ---")
+    # for filepath in testdir.datafilepaths:
+    #     avg_time, std_time = filepath.get_average_time_std()
+    #     print(f"{filepath}\t{avg_time}\t{std_time}")
