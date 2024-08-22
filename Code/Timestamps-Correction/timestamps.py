@@ -1,14 +1,33 @@
 import unittest
 import re
-from pathlib import Path
+import pathlib
+from pathlib import Path, PosixPath, WindowsPath
 import os
+import sys
 from contextlib import suppress
 from datetime import datetime
 
+"""
+PathLib is very differnt before Python 3.12.  The class Path is an abstract
+class that makes use of __new__ to return a substitute class.  This is not meant
+to be easily subclassed. We need to find the Concrete class ourselves to avoid 
+issues, since the real class (PosixPath or WindowsPath) are standard classes
+that can be subclassed naturally. But then, all arguments to __init__ are not used
+(they are used implicitly by the __new__ method).
 
-class TimestampPath(Path):
+Upgrade to 3.12, but this will work.
+"""
+BaseClass = Path
+if sys.version_info.minor <= 11:
+    BaseClass = PosixPath if os.name == 'posix' else WindowsPath
+
+class TimestampPath(BaseClass):
+
     def __init__(self, *args):
-        super().__init__(*args)
+        if sys.version_info.minor <= 11:
+            super().__init__()
+        else:
+            super().__init__(*args)
         
         self.timestamp_entries = self.get_possible_timestamps()
 
@@ -65,9 +84,12 @@ class TimestampPath(Path):
 
         return entries
 
-class LemmingDataDirectory(Path):
+class LemmingDataDirectory(BaseClass):
     def __init__(self, *args):
-        super().__init__(*args)
+        if sys.version_info.minor <= 11:
+            super().__init__()
+        else:
+            super().__init__(*args)
 
         if not self.is_dir() or not self.exists() :
             ValueError('LemmingDataDirectory must be an existing directory')
@@ -116,8 +138,15 @@ class LemmingDataDirectory(Path):
         return corrected_entries
         
 class TestFilenames(unittest.TestCase):
-    def test_init(self):
-        self.assertTrue(True)
+    def test_00_init(self):
+        files = os.listdir(Path("testdata_timestamps"))
+        print(files)
+        for file in files:
+            print(file)
+            self.assertIsNotNone(TimestampPath(file))
+
+        # self.filepaths = [ TimestampPath(filename) for filename in files]
+
 
     def test_01_timestamp_path(self):
         path1 = TimestampPath("0001-startFile-202475182821")
@@ -132,15 +161,15 @@ class TestFilenames(unittest.TestCase):
 
     def setUp(self):
         self.path = Path("testdata_timestamps")
-        files = os.listdir(self.path)
-        files.sort()
+    #     files = os.listdir(self.path)
+    #     files.sort()
 
-        self.filepaths = [ TimestampPath(filename) for filename in files]
-        self.filepaths = [ filepath for filepath in self.filepaths if len(filepath.timestamp_entries) >= 1] # Remove files not matching anything
+    #     self.filepaths = [ TimestampPath(filename) for filename in files]
+    #     self.filepaths = [ filepath for filepath in self.filepaths if len(filepath.timestamp_entries) >= 1] # Remove files not matching anything
 
-        self.timestamp_entries = []
-        for filepath in self.filepaths:
-            self.timestamp_entries.extend(filepath.timestamp_entries)
+    #     self.timestamp_entries = []
+    #     for filepath in self.filepaths:
+    #         self.timestamp_entries.extend(filepath.timestamp_entries)
 
     @unittest.skip('Experimenting with algos')
     def test_03_create_regex(self):
@@ -242,7 +271,8 @@ class TestFilenames(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main() # Un comment to run code below
+    unittest.main()
+    unittest.main(defaultTest=['TestFilenames.test_00_init']) # Un comment to run code below
 
     testdir = LemmingDataDirectory("testdata_timestamps")
 
