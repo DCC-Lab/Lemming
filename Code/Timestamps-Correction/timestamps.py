@@ -353,9 +353,9 @@ class TestFilenames(unittest.TestCase):
                 print(f"    Just before: {testdir.unambiguous_time_before(i)}")
                 print(f"    Just after {testdir.unambiguous_time_after(i)}")
 
-        time_offset = testdir.timestamp_entries[0]['time'].timestamp()
-        for entry in testdir.timestamp_entries:
-            print(f"{entry['event']}\t{entry['time'].timestamp()-time_offset}")
+        # time_offset = testdir.timestamp_entries[0]['time'].timestamp()
+        # for entry in testdir.timestamp_entries:
+        #     print(f"{entry['event']}\t{entry['time'].timestamp()-time_offset}")
 
 
     @unittest.skip('Im pushing it a bit here. Not necessary.')
@@ -369,7 +369,7 @@ class TestFilenames(unittest.TestCase):
 
 if __name__ == "__main__":
     # unittest.main()
-    unittest.main(defaultTest=['TestFilenames.test_11_validate_with_unambiguous_neighbours_before_and_after','TestFilenames.test_12_distributions_time_differences_between_entries']) # Un comment to run code below
+    unittest.main(defaultTest=['TestFilenames.test_11_validate_with_unambiguous_neighbours_before_and_after']) # Un comment to run code below
 
     testdir = LemmingDataDirectory("testdata_timestamps")
 
