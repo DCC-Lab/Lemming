@@ -33,6 +33,10 @@ class TimestampPath(BaseClass):
         
         self.timestamp_entries = self.get_possible_timestamps()
 
+    @property
+    def is_unambiguous(self):
+        return len(self.timestamp_entries) == 1
+
     def get_possible_matching_patterns(self):
         d1 = r"(\d)"      # One digit
         d2 = r"(\d\d)"    # Two digits
@@ -100,7 +104,7 @@ class LemmingDataDirectory(BaseClass):
 
         self.datafilepaths = [ TimestampPath(datafilename) for datafilename in datafilenames]
         self.datafilepaths = [ datafilepath for datafilepath in self.datafilepaths if len(datafilepath.timestamp_entries) >= 1] # Remove files not matching data file
-        self.datafilepaths.sort()
+        self.datafilepaths.sort() # Important
         self.timestamp_entries = []
         for filepath in self.datafilepaths:
             self.timestamp_entries.extend(filepath.timestamp_entries)
@@ -108,6 +112,30 @@ class LemmingDataDirectory(BaseClass):
     @property
     def datafile_count(self):
         return len(self.datafilepaths)
+
+    @property
+    def unambiguous_datafile_count(self):
+        return sum([ 1 for datafilepath in self.datafilepaths if datafilepath.is_unambiguous])
+
+    def unambiguous_time_before(self, i):
+        j = i
+        while j > 0:
+            j -= 1
+            filepath = self.datafilepaths[j]
+            if filepath.is_unambiguous:
+                return filepath.timestamp_entries[0]['time']
+
+        return datetime(year=2000, month=1, day=1, hour=0, minute=0, second=0)
+
+    def unambiguous_time_after(self, i):
+        j = i
+        while j < len(self.datafilepaths)-1:
+            j += 1
+            filepath = self.datafilepaths[j]
+            if filepath.is_unambiguous:
+                return filepath.timestamp_entries[0]['time']
+
+        return datetime(year=2100, month=1, day=1, hour=0, minute=0, second=0)
 
     @property
     def possible_timestamps_entries(self):
@@ -271,10 +299,77 @@ class TestFilenames(unittest.TestCase):
         testdir = LemmingDataDirectory("testdata_timestamps")
         self.assertTrue(len(testdir.corrected_timestamps_entries) == testdir.datafile_count)
 
+    def test_10_unambiguous_file(self):
+        testdir = LemmingDataDirectory("testdata_timestamps")
+        before = testdir.unambiguous_time_before(1)
+        # self.assertEqual(before['event'], 1)
+        before = testdir.unambiguous_time_before(2)
+        # self.assertEqual(before['event'], 2)
+        # self.assertIsNone(testdir.unambiguous_time_before(0))
+
+        after = testdir.unambiguous_time_after(1)
+        # self.assertEqual(after['event'], 3)
+        after = testdir.unambiguous_time_after(2)
+        # self.assertEqual(after['event'], 4)
+        # self.assertIsNone(testdir.unambiguous_time_after(233))
+
+
+        # print(testdir.unambiguous_time_before(17))
+        # print(testdir.unambiguous_time_after(17))
+
+    def test_11_validate_with_unambiguous_neighbours_before_and_after(self):
+        testdir = LemmingDataDirectory("testdata_timestamps")
+
+        previous_unambiguous = testdir.unambiguous_datafile_count 
+        while True:
+            testdir.datafilepaths.sort()
+            for i, filepath in enumerate(testdir.datafilepaths):
+                if filepath.is_unambiguous:
+                    continue
+
+                before_time = testdir.unambiguous_time_before(i)
+                after_time = testdir.unambiguous_time_after(i)
+
+                to_validate = filepath.timestamp_entries.copy()
+                still_possible = []
+
+                for possible_timestamp_entry in to_validate:
+                    if possible_timestamp_entry['time'] > before_time and possible_timestamp_entry['time'] < after_time:
+                        still_possible.append(possible_timestamp_entry)
+
+                filepath.timestamp_entries = still_possible
+
+            if previous_unambiguous < testdir.unambiguous_datafile_count:
+                print(f'Improved from {previous_unambiguous} to {testdir.unambiguous_datafile_count}')
+                previous_unambiguous = testdir.unambiguous_datafile_count
+            else: # Stable, give up
+                print(f'Stable at {previous_unambiguous}')
+                break
+
+        for i, filepath in enumerate(testdir.datafilepaths):
+            if not filepath.is_unambiguous:
+                print(f"{filepath} still has multiple interpretations:")
+                print(f"    {len(filepath.timestamp_entries)} option(s): " +", ".join([ str(entry['time']) for entry in filepath.timestamp_entries ]))
+                print(f"    Just before: {testdir.unambiguous_time_before(i)}")
+                print(f"    Just after {testdir.unambiguous_time_after(i)}")
+
+        time_offset = testdir.timestamp_entries[0]['time'].timestamp()
+        for entry in testdir.timestamp_entries:
+            print(f"{entry['event']}\t{entry['time'].timestamp()-time_offset}")
+
+
+    @unittest.skip('Im pushing it a bit here. Not necessary.')
+    def test_12_distributions_time_differences_between_entries(self):
+        testdir = LemmingDataDirectory("testdata_timestamps")
+
+        for i, datafilepath in enumerate(testdir.datafilepaths):
+            if datafilepath.is_unambiguous:
+                after_time = testdir.unambiguous_time_after(i)
+                print( (after_time - datafilepath.timestamp_entries[0]['time']).total_seconds() )
 
 if __name__ == "__main__":
     # unittest.main()
-    # unittest.main(defaultTest=['TestFilenames.test_00_init']) # Un comment to run code below
+    unittest.main(defaultTest=['TestFilenames.test_11_validate_with_unambiguous_neighbours_before_and_after','TestFilenames.test_12_distributions_time_differences_between_entries']) # Un comment to run code below
 
     testdir = LemmingDataDirectory("testdata_timestamps")
 
