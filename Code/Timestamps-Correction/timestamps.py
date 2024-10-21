@@ -1,10 +1,8 @@
 import unittest
 import re
-import pathlib
 from pathlib import Path, PosixPath, WindowsPath
 import os
 import sys
-from contextlib import suppress
 from datetime import datetime
 
 """
@@ -273,22 +271,44 @@ class TestFilenames(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    # unittest.main()
-    # unittest.main(defaultTest=['TestFilenames.test_00_init']) # Un comment to run code below
-
-    testdir = LemmingDataDirectory("testdata_timestamps")
-
-    # print("--- All data file paths ---")
+    # # unittest.main()
+    # # unittest.main(defaultTest=['TestFilenames.test_00_init']) # Un comment to run code below
+    #
+    # testdir = LemmingDataDirectory("testdata_timestamps")
+    #
+    # # print("--- All data file paths ---")
+    # # for filepath in testdir.datafilepaths:
+    # #     print(f"{filepath}")
+    #
+    # print("--- All options for each data file path ---")
     # for filepath in testdir.datafilepaths:
     #     print(f"{filepath}")
+    #     print(f"    {len(filepath.timestamp_entries)} option(s): " +", ".join([ str(entry['time']) for entry in filepath.timestamp_entries ]))
+    #
+    # print("--- Unique option for each data file path ---")
+    # for timestamp_entry in testdir.corrected_timestamps_entries:
+    #     print(f"{timestamp_entry['corrected_filepath']} -> {timestamp_entry['original_filepath']}")
+    #
 
-    print("--- All options for each data file path ---")
-    for filepath in testdir.datafilepaths:
-        print(f"{filepath}")
-        print(f"    {len(filepath.timestamp_entries)} option(s): " +", ".join([ str(entry['time']) for entry in filepath.timestamp_entries ]))
+    parent_directory = 'test_data'
 
-    print("--- Unique option for each data file path ---")
-    for timestamp_entry in testdir.corrected_timestamps_entries:
-        print(f"{timestamp_entry['corrected_filepath']} -> {timestamp_entry['original_filepath']}")
+    for subfolder_name in os.listdir(parent_directory):
+        subfolder_path = os.path.join(parent_directory, subfolder_name)
+        i = 0
+        if os.path.isdir(subfolder_path):
+            testdir = LemmingDataDirectory(subfolder_path)
 
+            for idx, file_name in enumerate(os.listdir(subfolder_path)):
+                file_path = os.path.join(subfolder_path, file_name)
 
+                if os.path.isfile(file_path):
+                    if file_name == 'setupFile':
+                        continue
+                    else:
+                        new_name = next((d['corrected_filepath'] for d in testdir.corrected_timestamps_entries if d['original_filepath'] == file_name), None)
+                        new_file_path = os.path.join(subfolder_path, new_name)
+                        os.rename(file_path, new_file_path)
+                        # print(f'Renamed: {file_name} to {new_name} in {subfolder_name}')
+                        # i += 1
+
+        print(f'Renamed: {i} filename in the folder {subfolder_name}')
