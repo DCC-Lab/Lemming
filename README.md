@@ -1,7 +1,7 @@
 # LEM: Lemming Enumeration Module
 Authors: Authors: Gabriel Bergeron*, Mireille Quémener*, Thomas Shooner, Christopher Mathault, Nathan Bérubé, Daniel Côté, Dominique Fauteux, Pierre Legagneux
+<img src="images/LEM_device" width="400">
 
-![[LEM_device.png]]
 ## Context
 This project focuses on the development of a monitoring device for small mammals, specifically targeting the lemming. The device is designed for deployment in extreme environments, such as the Arctic.
 
@@ -40,7 +40,9 @@ The workflow is divided into three distinct phases to match the deployment cycle
 - **Data Retrieval (`read_lem_v3_pcf8523`):** After retrieving the device from the field and powering it down, upload this code to output the stored SPIFFS data to the serial terminal.
 
 **Data Downloader Utility:** After uploading the retrieval code, you can use our standalone desktop utility (available for Windows 64-bit) to download data directly to your computer. This utility includes a simple UI to select the FireBeetle's COM port and your destination folder. You can find this program under the **Releases** section.
+
 ### CAD files
 The `CAD` folder contains **STEP files** of the full LEM assembly. Native project files (Fusion360 or SolidWorks) are available upon request.
+
 ### PCB files
 **Gerber files** for the PCB are located in `PCB/LEM_v3/gerberFiles`.
