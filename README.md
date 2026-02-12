@@ -27,7 +27,8 @@ The LEM circuit is optimized for ultra-low power consumption, enabling autonomou
 - **Power Supply:** Operates on **three AA alkaline batteries** (4.5V total). Field tests show the system can maintain sufficient voltage for over 390 days of operation at average temperatures of -9°C.
 - **Interface:** Features a waterproof external **rocker switch (ZF Electronics KRE2ANA1BBD)** for field activation/deactivation. Data is retrieved via a standard **USB connection** to the FireBeetle.
 - **Custom PCB**: a custom PCB was designed for the spectific needs of this project. 
-![Lemming Circuit](images/LEM_circuit.png)
+<img src="images/LEM_circuit.png" width="400">
+
 ## What you will find in this repository
 **Important:** The LEM device deployed at Bylot Island represents **Version 3**. For the record, two previous prototypes were designed and tested before converging on this final iteration.
 ### Codes
