@@ -1,4 +1,5 @@
 # LEM: Lemming Enumeration Module
+Authors: Authors: Gabriel Bergeron*, Mireille Quémener*, Thomas Shooner, Christopher Mathault, Nathan Bérubé, Daniel Côté, Dominique Fauteux, Pierre Legagneux
 
 ## CAD files
 CAD models are made using Fusion360 and the files are saved on the Autodesk360 cloud. Ask Mireille to get the access (you need an Autodesk360 account).
