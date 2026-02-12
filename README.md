@@ -1,6 +1,7 @@
 # LEM: Lemming Enumeration Module
 Authors: Authors: Gabriel Bergeron*, Mireille Quémener*, Thomas Shooner, Christopher Mathault, Nathan Bérubé, Daniel Côté, Dominique Fauteux, Pierre Legagneux
-<img src="images/LEM_device.png" width="400">
+
+<img src="images/LEM_device.png" width="500">
 
 ## Context
 This project focuses on the development of a monitoring device for small mammals, specifically targeting the lemming. The device is designed for deployment in extreme environments, such as the Arctic.
